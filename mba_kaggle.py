@@ -8,6 +8,8 @@ import numpy as np
 from sklearn.preprocessing import normalize
 import math    
 from collections import Counter
+from scipy.spatial.distance import cosine
+
 def get_products(clients, rules, flag): 
     # flag = 0: return list of recommendation 
     # flag = 1: return confidence
@@ -71,20 +73,16 @@ def get_products(clients, rules, flag):
         return selected    
     
 def distCosine (vecA, vecB): 
-    def dotProduct (vecA, vecB): 
-        d = 0.0
-        size_v = len(vecA) 
-        for indx in range(size_v): 
-            if vecA[indx] in vecB: 
-                d += vecA[indx]*vecB[indx] 
+    def dotProduct (vecA, vecB):
+        d = np.multiply(vecA, vecB).sum()
         return d
-    a =  dotProduct (vecA,vecB)
+    a = dotProduct (vecA,vecB)
     b = math.sqrt(dotProduct(vecA,vecA))
-    c = math.sqrt(dotProduct(vecB,vecB)) 
+    c = math.sqrt(dotProduct(vecB,vecB))
     if (b ==0 or c == 0):
         return 0
     else:
-        return dotProduct (vecA,vecB) / math.sqrt(dotProduct(vecA,vecA)) / math.sqrt(dotProduct(vecB,vecB)) 
+        return a / b / c
 
 def get_recommendation_cos(Matrix_cos, client, df_lbl):
     recommendation = []
@@ -130,7 +128,8 @@ def get_recommendation(client, recommendations, rules):
     
 if __name__ == "__main__":
     
-    data_path = "E:\Data\kaggle"
+    # data_path = "D:\Data\\retail\kaggle"
+    data_path = "D:\Data\\retail\kaggle"
     data_train = pd.read_csv('{0}/order_products__train.csv'.format(data_path))
     data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
     data_product = pd.read_csv('{0}/products.csv'.format(data_path))
