@@ -1,13 +1,12 @@
 import pandas as pd
-from mlxtenda.mlxtend.frequent_patterns import apriori
-from mlxtenda.mlxtend.frequent_patterns import association_rules
+from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import association_rules
 from matplotlib import pyplot as plt
 import random
 import xlrd
 import numpy as np
 from sklearn.preprocessing import normalize
 import math    
-import matplotlib.pyplot as plt
 from collections import Counter
 def get_products(clients, rules, flag): 
     # flag = 0: return list of recommendation 
@@ -131,11 +130,11 @@ def get_recommendation(client, recommendations, rules):
     
 if __name__ == "__main__":
     
-    
-    data_train = pd.read_csv('../data/dataset3/order_products__train.csv')
-    data_order = pd.read_csv('../data/dataset3/orders.csv')
-    data_product = pd.read_csv('../data/dataset3/products.csv')
-    data_aisle = pd.read_csv('../data/dataset3/aisles.csv')
+    data_path = "E:\Data\kaggle"
+    data_train = pd.read_csv('{0}/order_products__train.csv'.format(data_path))
+    data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
+    data_product = pd.read_csv('{0}/products.csv'.format(data_path))
+    data_aisle = pd.read_csv('{0}/aisles.csv'.format(data_path))
     
     data_tmp = pd.merge(data_train,data_order,on = ['order_id','order_id'])
     data_tmp = pd.merge(data_tmp,data_product,on = ['product_id','product_id'])
@@ -236,15 +235,6 @@ if __name__ == "__main__":
     #rul = get_products(clients_aisle[0], rules, 0) #list of recommendation
     #print('cos',(cos))
     #print('rules',(rul))
-    
-    print ("RESULT = ", sum/float(C)) #sum -> counter
-    print("Zeros", c_zeroz,'/',C)
     conf = np.sort(conf)
-    counter=Counter(conf)
-    X = counter.values()
-    Y = counter.keys()
-    plt.bar(X,Y)
-    plt.xlabel('confidence')
-    plt.ylabel('frequency')
-    plt.show()
-    
+
+    np.savetxt("tmp/confidence.csv", conf, delimiter=";")
