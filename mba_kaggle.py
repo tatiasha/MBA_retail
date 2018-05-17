@@ -129,24 +129,25 @@ def get_recommendation(client, recommendations, rules):
 if __name__ == "__main__":
     
     # data_path = "D:\Data\\retail\kaggle"
-    data_path = "D:\Data\\retail\kaggle"
+    data_path = "E:\Data\kaggle"
     data_train = pd.read_csv('{0}/order_products__train.csv'.format(data_path))
     data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
     data_product = pd.read_csv('{0}/products.csv'.format(data_path))
     data_aisle = pd.read_csv('{0}/aisles.csv'.format(data_path))
     
-    data_tmp = pd.merge(data_train,data_order,on = ['order_id','order_id'])
-    data_tmp = pd.merge(data_tmp,data_product,on = ['product_id','product_id'])
-    data_tmp = pd.merge(data_tmp,data_aisle,on = ['aisle_id','aisle_id'])
+    data_tmp = pd.merge(data_train, data_order, on = ['order_id', 'order_id'])
+    data_tmp = pd.merge(data_tmp, data_product, on = ['product_id', 'product_id'])
+    data_tmp = pd.merge(data_tmp, data_aisle, on = ['aisle_id', 'aisle_id'])
     data_tmp = data_tmp.sort_values(by=['aisle_id'])
     
     data_lbl = data_tmp[['aisle_id','aisle']]
     
     N_d = 1000
     data = pd.crosstab(data_tmp['order_id'],data_tmp['aisle'])
+
     #data = data[:N_d]
-    data_matrix_ = data.as_matrix()
-    data_matrix = data_matrix_[:N_d]
+    data_matrix = data.as_matrix()
+    #data_matrix = data_matrix[:N_d]
     print("Files are read")
     
     
@@ -159,22 +160,22 @@ if __name__ == "__main__":
     
     Matrix_cos = [[0 for x in range(N)] for y in range(N)]
     for i in range(N):
-        for j in range(i,N):
-            i_i = data_matrix[:,i]
-            j_j = data_matrix[:,j]
+        for j in range(i, N):
+            i_i = data_matrix[:, i]
+            j_j = data_matrix[:, j]
             cosine = distCosine(i_i, j_j)
             Matrix_cos[i][j] = cosine
             Matrix_cos[j][i] = cosine
     print('Matrix_cos - ok')
-           
+    np.savetxt('tmp/matrix_sim_train.csv', Matrix_cos)
     clients_aisle = []
     clients_aisle_id = []
     tmp_array = [df[0][1]]
     tmp_array_id = [df[0][2]]
     
     N = len(data)
-    for i in range(1,N):
-        if(df[i][0]==df[i-1][0]):
+    for i in range(1, N):
+        if(df[i][0] == df[i-1][0]):
             tmp_array.append(df[i][1])
             tmp_array_id.append(df[i][2])
             
@@ -186,21 +187,22 @@ if __name__ == "__main__":
             tmp_array_id = [df[i][2]]
                 
     print('clients - ok')
-    
-    
-    f_i_data = apriori(data, min_support=0.005, use_colnames=True)
+
+    f_i_data = apriori(data, min_support=0.001, use_colnames=True)
     f_i_data = f_i_data.sort_values(by=['support'],ascending=False)    
     
-    f_items =  f_i_data['itemsets'].tolist()
+    f_items = f_i_data['itemsets'].tolist()
     rules = association_rules(f_i_data, metric="lift", min_threshold=1)
     rules = rules.sort_values(by=['support'],ascending=False)
     print (rules.head())
-    
+    rules.to_csv('rules_prior.csv')
+    rules.to_csv('tmp/rules_prior.csv')
+
     #print('len(rules)',len(rules)) 
     print('rules - ok')
-    
+
     counter = 0
-    C = 50#len(clients)
+    C = len(clients_aisle)
     
     conf = []    
     sum = 0
@@ -236,4 +238,4 @@ if __name__ == "__main__":
     #print('rules',(rul))
     conf = np.sort(conf)
 
-    np.savetxt("tmp/confidence.csv", conf, delimiter=";")
+    np.savetxt("tmp/confidence_train.csv", conf, delimiter=";")
