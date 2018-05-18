@@ -3,17 +3,18 @@ from mlxtend.frequent_patterns import apriori
 from mlxtend.frequent_patterns import association_rules
 import numpy as np
 from sklearn.cluster import KMeans
+import math
 
 
-data_path = "E:\Projects\MBA_retail\\tmp\old"
+data_path = "E:\Projects\MBA_retail\\tmp"
 N_clusters = 4
 
 def get_train_data():
-    prior = pd.read_csv('{0}/order_products__train.csv'.format(data_path))
-    N = len(prior)
-    products = pd.read_csv('{0}/products.csv'.format(data_path))
-    aisles = pd.read_csv('{0}/aisles.csv'.format(data_path))
-    orders = pd.read_csv('{0}/orders.csv'.format(data_path))
+    data_path_train = 'E:\Data\kaggle'
+    prior = pd.read_csv('{0}/order_products__train.csv'.format(data_path_train))
+    products = pd.read_csv('{0}/products.csv'.format(data_path_train))
+    aisles = pd.read_csv('{0}/aisles.csv'.format(data_path_train))
+    orders = pd.read_csv('{0}/orders.csv'.format(data_path_train))
     mt = pd.merge(prior, products, on=['product_id', 'product_id'])
     mt = pd.merge(mt, aisles, on=['aisle_id', 'aisle_id'])
     mt = pd.merge(mt, orders, on=['order_id', 'order_id'])
@@ -25,28 +26,27 @@ def get_train_data():
     return cust_prod
 
 def get_clients():
-    data_path = "E:\Data\kaggle"
-    data_prior = pd.read_csv('{0}/order_products__prior.csv'.format(data_path))
-    data_prior = data_prior[:10000]
-    data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
-    data_product = pd.read_csv('{0}/products.csv'.format(data_path))
-    data_aisle = pd.read_csv('{0}/aisles.csv'.format(data_path))
+    data_path_train = 'E:\Data\kaggle'
+    prior = pd.read_csv('{0}/order_products__prior.csv'.format(data_path_train))
+    prior = prior[:50000]
+    products = pd.read_csv('{0}/products.csv'.format(data_path_train))
+    aisles = pd.read_csv('{0}/aisles.csv'.format(data_path_train))
+    orders = pd.read_csv('{0}/orders.csv'.format(data_path_train))
+    mt = pd.merge(prior, products, on=['product_id', 'product_id'])
+    mt = pd.merge(mt, aisles, on=['aisle_id', 'aisle_id'])
+    mt = pd.merge(mt, orders, on=['order_id', 'order_id'])
 
-    data_tmp = pd.merge(data_prior, data_order, on=['order_id', 'order_id'])
-    data_tmp = pd.merge(data_tmp, data_product, on=['product_id', 'product_id'])
-    data_tmp = pd.merge(data_tmp, data_aisle, on=['aisle_id', 'aisle_id'])
-    data_tmp = data_tmp.sort_values(by=['aisle_id'])
+    mt_sort = mt['aisle'].value_counts()
 
-    data = pd.crosstab(data_tmp['order_id'], data_tmp['aisle'])
-    data_lbl = data_tmp[['aisle_id', 'aisle']]
+    cust_prod = pd.crosstab(mt['order_id'], mt['aisle'])  # user_id
 
-    print("Files for clients are read")
+    data_lbl = mt[['aisle_id', 'aisle']]
 
-    df1 = data_tmp[['order_id', 'aisle', 'aisle_id']]
+    df1 = mt[['order_id', 'aisle', 'aisle_id']]
     df1 = df1.sort_values(by=['order_id'])
     df = df1.as_matrix()
 
-    N = len(data)
+    N = len(cust_prod)
     clients_aisle = []
     clients_aisle_id = []
     tmp_array = [df[0][1]]
@@ -65,16 +65,14 @@ def get_clients():
             tmp_array_id = [df[i][2]]
 
     print('clients - ok')
-    return clients_aisle, clients_aisle_id, data_lbl
+    return clients_aisle, clients_aisle_id, data_lbl, cust_prod
 
 def matrix_cosine(file_path):
 
     data = pd.read_csv(file_path)
     data_matrix = data.as_matrix()
-    print("Files are read")
 
     N = len(data_matrix[0])
-    print(len(data_matrix), len(data_matrix[1]))
 
     Matrix_cos = [[0 for x in range(N)] for y in range(N)]
     for i in range(N):
@@ -209,44 +207,47 @@ def get_recommendation(client, recommendations, rules):
 if __name__ == "__main__":
     data_path = "E:\Projects\MBA_retail\\tmp"
 
-    clients_aisle, clients_aisle_id , data_lbl = get_clients()
+    clients_aisle, clients_aisle_id , data_lbl, clients_matrix = get_clients()
 
     rules_cluster_1 = pd.read_csv('{0}/rules_cluster_1.csv'.format(data_path))
     rules_cluster_2 = pd.read_csv('{0}/rules_cluster_2.csv'.format(data_path))
     rules_cluster_3 = pd.read_csv('{0}/rules_cluster_3.csv'.format(data_path))
     rules_cluster_4 = pd.read_csv('{0}/rules_cluster_4.csv'.format(data_path))
+    print('rules')
 
     matrix_cluster_1 = matrix_cosine('{0}/train_cluster_1.csv'.format(data_path))
     matrix_cluster_2 = matrix_cosine('{0}/train_cluster_2.csv'.format(data_path))
     matrix_cluster_3 = matrix_cosine('{0}/train_cluster_3.csv'.format(data_path))
     matrix_cluster_4 = matrix_cosine('{0}/train_cluster_4.csv'.format(data_path))
-
+    print('matrix')
     train_data = get_train_data()
     clusterer = KMeans(n_clusters=N_clusters).fit(train_data)
 
     number_clients = len(clients_aisle)
     conf = []
+    c_preds = clusterer.predict(clients_matrix)
+    print('prediction')
     for c in range(number_clients):
-        c_preds = clusterer.predict(clients_aisle[c])
-        if (c_preds == 0):
+        if (c_preds[c] == 0):
             Matrix_cos = matrix_cluster_1
             rules = rules_cluster_1
-        if (c_preds == 1):
+        if (c_preds[c] == 1):
             Matrix_cos = matrix_cluster_2
             rules = rules_cluster_2
-        if (c_preds == 2):
+        if (c_preds[c] == 2):
             Matrix_cos = matrix_cluster_3
             rules = rules_cluster_3
-        if (c_preds == 3):
+        if (c_preds[c] == 3):
             Matrix_cos = matrix_cluster_4
             rules = rules_cluster_4
 
-        print(c + 1, '/', number_clients)
+        print('{0}/{1} - cluster{2} - rules = {3}'.format(c+1, number_clients, c_preds[c], len(rules)))
 
         cos = get_recommendation_cos(Matrix_cos, clients_aisle_id[c], data_lbl)
         cos = list((set(cos) - set(clients_aisle[c])))
+        print('len(cos)', len(cos))
         result = get_recommendation(clients_aisle[c], cos, rules)
         print(result)
         conf.append(result)
 
-    np.savetxt("tmp/confidence_train.csv", conf, delimiter=";")
+    np.savetxt("tmp/confidence_clusters.csv", conf, delimiter=";")

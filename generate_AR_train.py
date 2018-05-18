@@ -21,15 +21,14 @@ if __name__ == "__main__":
     data_lbl = data_tmp[['aisle_id', 'aisle']]
 
     data = pd.crosstab(data_tmp['order_id'], data_tmp['aisle'])
-
+    print('files ok')
     f_i_data = apriori(data, min_support=0.001, use_colnames=True)
     f_i_data = f_i_data.sort_values(by=['support'], ascending=False)
-
+    print('fi ok')
     f_items = f_i_data['itemsets'].tolist()
     rules = association_rules(f_i_data, metric="lift", min_threshold=1)
     rules = rules.sort_values(by=['support'], ascending=False)
-    print(rules.head())
-    rules.to_csv('rules_prior.csv')
-    rules.to_csv('tmp/rules_prior.csv')
+    #rules.to_csv('rules_train.csv')
+    rules.to_csv('tmp/rules_train.csv')
 
-    print('rules - ok')
+    print('rules - ', len(rules))

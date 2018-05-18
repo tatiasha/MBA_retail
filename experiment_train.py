@@ -13,7 +13,7 @@ from scipy.spatial.distance import cosine
 def get_clients():
     data_path = "E:\Data\kaggle"
     data_prior = pd.read_csv('{0}/order_products__prior.csv'.format(data_path))
-    data_prior = data_prior[:10000]
+    data_prior = data_prior[:50000]
     data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
     data_product = pd.read_csv('{0}/products.csv'.format(data_path))
     data_aisle = pd.read_csv('{0}/aisles.csv'.format(data_path))
@@ -215,8 +215,8 @@ if __name__ == "__main__":
 
     clients_aisle, clients_aisle_id , data_lbl = get_clients()
 
-    rules = pd.read_csv('{0}rules_train.csv'.format(data_path_rules))
-    print('rules - ok')
+    rules = pd.read_csv('{0}/rules_train.csv'.format(data_path_rules))
+    print('rules - ok', len(rules))
 
     C = len(clients_aisle)
 
@@ -225,6 +225,7 @@ if __name__ == "__main__":
         print(i + 1, '/', C)
         cos = get_recommendation_cos(Matrix_cos, clients_aisle_id[i], data_lbl)
         cos = list((set(cos) - set(clients_aisle[i])))
+        print('clients - {0}; cos - {1}'.format(len(clients_aisle[i]),len(cos)))
         result = get_recommendation(clients_aisle[i], cos, rules)
         print(result)
         conf.append(result)
