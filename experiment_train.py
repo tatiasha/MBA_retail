@@ -9,7 +9,7 @@ from sklearn.preprocessing import normalize
 import math
 from collections import Counter
 from scipy.spatial.distance import cosine
-
+import re
 def get_clients():
     data_path = "E:\Data\kaggle"
     data_prior = pd.read_csv('{0}/order_products__prior.csv'.format(data_path))
@@ -153,15 +153,15 @@ def get_recommendation_cos(Matrix_cos, client, df_lbl):
     return recommendation
 
 
-def get_recommendation(client, recommendations, rules):
+def get_recommendation(client, recommendations, x_data, y_data, c_data):
     col_names = ['antecedants', 'consequents', 'confidence']
     recommendation_rules = pd.DataFrame(columns=col_names)
 
-    x_data = rules['antecedants'].tolist()
-    x_data = [list(_x) for _x in x_data]
-    y_data = rules['consequents'].tolist()
-    y_data = [list(_y) for _y in y_data]
-    c_data = rules['confidence'].tolist()
+    # x_data = rules['antecedants'].tolist()
+    # x_data = [list(_x) for _x in x_data]
+    # y_data = rules['consequents'].tolist()
+    # y_data = [list(_y) for _y in y_data]
+    # c_data = rules['confidence'].tolist()
     N = len(x_data)
     for r in range(N):
         ch = list(set(client) & set(x_data[r]))
@@ -173,63 +173,81 @@ def get_recommendation(client, recommendations, rules):
     result_confidence = get_products(client, recommendation_rules, 1)
     return result_confidence
 
+def parse_rules(rules, type):
+    x_data = rules[type]
+    x_data_r = []
+    for x in x_data:
+        x_d = x[10:len(x) - 1]
+        x_d = re.sub("[{})(]", "", x_d)
+        t_ = ''
+        for st in range(len(x_d)):
+            if x_d[st] != "'" and x_d[st - 1] != ',':
+                t_ += x_d[st]
+        x_d = t_.split(',')
+        x_data_r.append(x_d)
+    return x_data_r
 
 if __name__ == "__main__":
 
     # data_path = "D:\Data\\retail\kaggle"
-    data_path = "E:\Data\kaggle"
-    data_path_rules = "E:\Projects\MBA_retail\\tmp"
-
-    data_train = pd.read_csv('{0}/order_products__train.csv'.format(data_path))
-    data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
-    data_product = pd.read_csv('{0}/products.csv'.format(data_path))
-    data_aisle = pd.read_csv('{0}/aisles.csv'.format(data_path))
-
-    data_tmp = pd.merge(data_train, data_order, on=['order_id', 'order_id'])
-    data_tmp = pd.merge(data_tmp, data_product, on=['product_id', 'product_id'])
-    data_tmp = pd.merge(data_tmp, data_aisle, on=['aisle_id', 'aisle_id'])
-    data_tmp = data_tmp.sort_values(by=['aisle_id'])
-
-    data_lbl = data_tmp[['aisle_id', 'aisle']]
-    data = pd.crosstab(data_tmp['order_id'], data_tmp['aisle'])
-    data_matrix = data.as_matrix()
-    print("Files are read")
-
-    df1 = data_tmp[['order_id', 'aisle', 'aisle_id']]
-    df1 = df1.sort_values(by=['order_id'])
-    df = df1.as_matrix()
-
-    N = len(data_matrix[0])
-    print(len(data_matrix), len(data_matrix[1]))
-
-    Matrix_cos = [[0 for x in range(N)] for y in range(N)]
-    for i in range(N):
-        for j in range(i, N):
-            i_i = data_matrix[:, i]
-            j_j = data_matrix[:, j]
-            cosine = distCosine(i_i, j_j)
-            Matrix_cos[i][j] = cosine
-            Matrix_cos[j][i] = cosine
-    print('Matrix_cos - ok')
+    # data_path = "E:\Data\kaggle"
+    # data_path_rules = "E:\Projects\MBA_retail\\tmp"
+    #
+    # data_train = pd.read_csv('{0}/order_products__train.csv'.format(data_path))
+    # data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
+    # data_product = pd.read_csv('{0}/products.csv'.format(data_path))
+    # data_aisle = pd.read_csv('{0}/aisles.csv'.format(data_path))
+    #
+    # data_tmp = pd.merge(data_train, data_order, on=['order_id', 'order_id'])
+    # data_tmp = pd.merge(data_tmp, data_product, on=['product_id', 'product_id'])
+    # data_tmp = pd.merge(data_tmp, data_aisle, on=['aisle_id', 'aisle_id'])
+    # data_tmp = data_tmp.sort_values(by=['aisle_id'])
+    #
+    # data_lbl = data_tmp[['aisle_id', 'aisle']]
+    # data = pd.crosstab(data_tmp['order_id'], data_tmp['aisle'])
+    # data_matrix = data.as_matrix()
+    # print("Files are read")
+    #
+    # df1 = data_tmp[['order_id', 'aisle', 'aisle_id']]
+    # df1 = df1.sort_values(by=['order_id'])
+    # df = df1.as_matrix()
+    #
+    # N = len(data_matrix[0])
+    # print(len(data_matrix), len(data_matrix[1]))
+    #
+    # Matrix_cos = [[0 for x in range(N)] for y in range(N)]
+    # for i in range(N):
+    #     for j in range(i, N):
+    #         i_i = data_matrix[:, i]
+    #         j_j = data_matrix[:, j]
+    #         cosine = distCosine(i_i, j_j)
+    #         Matrix_cos[i][j] = cosine
+    #         Matrix_cos[j][i] = cosine
+    # print('Matrix_cos - ok')
 
 
     clients_aisle, clients_aisle_id , data_lbl = get_clients()
+    print(len(clients_aisle))
 
-    rules = pd.read_csv('{0}/rules_train.csv'.format(data_path_rules))
-    print('rules - ok', len(rules))
-
-    C = len(clients_aisle)
-
-    conf = []
-    for i in range(C):
-        print(i + 1, '/', C)
-        cos = get_recommendation_cos(Matrix_cos, clients_aisle_id[i], data_lbl)
-        cos = list((set(cos) - set(clients_aisle[i])))
-        print('clients - {0}; cos - {1}'.format(len(clients_aisle[i]),len(cos)))
-        result = get_recommendation(clients_aisle[i], cos, rules)
-        print(result)
-        conf.append(result)
-
-    conf = np.sort(conf)
-
-    np.savetxt("tmp/confidence_train.csv", conf, delimiter=";")
+    # rules = pd.read_csv('{0}/rules_train.csv'.format(data_path_rules))
+    # rules = rules[:1000000]
+    # x_data = parse_rules(rules, 'antecedants')
+    # y_data = parse_rules(rules, 'consequents')
+    # c_data = rules['confidence'].tolist()
+    # print('rules - ok', len(rules))
+    #
+    # C = 300#len(clients_aisle)
+    #
+    # conf = []
+    # for i in range(C):
+    #     print(i + 1, '/', C)
+    #     cos = get_recommendation_cos(Matrix_cos, clients_aisle_id[i], data_lbl)
+    #     cos = list((set(cos) - set(clients_aisle[i])))
+    #     print('clients - {0}; cos - {1}'.format(len(clients_aisle[i]),len(cos)))
+    #     result = get_recommendation(clients_aisle[i], cos, x_data, y_data, c_data)
+    #     print(result)
+    #     conf.append(result)
+    #
+    # conf = np.sort(conf)
+    #
+    # np.savetxt("tmp/confidence_train.csv", conf, delimiter=";")

@@ -4,7 +4,7 @@ from mlxtend.frequent_patterns import association_rules
 import numpy as np
 from sklearn.cluster import KMeans
 import math
-
+import re
 
 data_path = "E:\Projects\MBA_retail\\tmp"
 N_clusters = 4
@@ -183,15 +183,17 @@ def get_recommendation_cos(Matrix_cos, client, df_lbl):
     return recommendation
 
 
-def get_recommendation(client, recommendations, rules):
+def get_recommendation(client, recommendations,  x_data, y_data, c_dat):
     col_names = ['antecedants', 'consequents', 'confidence']
     recommendation_rules = pd.DataFrame(columns=col_names)
-
+    '''''''''''
     x_data = rules['antecedants'].tolist()
     x_data = [list(_x) for _x in x_data]
+
     y_data = rules['consequents'].tolist()
     y_data = [list(_y) for _y in y_data]
     c_data = rules['confidence'].tolist()
+    '''
     N = len(x_data)
     for r in range(N):
         ch = list(set(client) & set(x_data[r]))
@@ -203,16 +205,57 @@ def get_recommendation(client, recommendations, rules):
     result_confidence = get_products(client, recommendation_rules, 1)
     return result_confidence
 
-
+def parse_rules(rules, type):
+    x_data = rules[type]
+    x_data_r = []
+    for x in x_data:
+        x_d = x[10:len(x) - 1]
+        x_d = re.sub("[{})(]", "", x_d)
+        t_ = ''
+        for st in range(len(x_d)):
+            if x_d[st] != "'" and x_d[st - 1] != ',':
+                t_ += x_d[st]
+        x_d = t_.split(',')
+        x_data_r.append(x_d)
+    return x_data_r
 if __name__ == "__main__":
     data_path = "E:\Projects\MBA_retail\\tmp"
 
     clients_aisle, clients_aisle_id , data_lbl, clients_matrix = get_clients()
 
+    print('rules_start')
     rules_cluster_1 = pd.read_csv('{0}/rules_cluster_1.csv'.format(data_path))
+    if (len(rules_cluster_1)>500000):
+        rules_cluster_1 =  rules_cluster_1[:500000]
+    x_data_1 = parse_rules(rules_cluster_1,'antecedants')
+    y_data_1 = parse_rules(rules_cluster_1,'consequents')
+    c_data_1 = rules_cluster_1['confidence'].tolist()
+    print('cluser 1 - rules')
+
     rules_cluster_2 = pd.read_csv('{0}/rules_cluster_2.csv'.format(data_path))
+    if (len(rules_cluster_2)>500000):
+        rules_cluster_2 =  rules_cluster_2[:500000]
+    x_data_2 = parse_rules(rules_cluster_2, 'antecedants')
+    y_data_2 = parse_rules(rules_cluster_2, 'consequents')
+    c_data_2 = rules_cluster_2['confidence'].tolist()
+    print('cluster 2 - rules')
+
     rules_cluster_3 = pd.read_csv('{0}/rules_cluster_3.csv'.format(data_path))
+    if (len(rules_cluster_3)>500000):
+        rules_cluster_3 =  rules_cluster_3[:500000]
+    x_data_3 = parse_rules(rules_cluster_3, 'antecedants')
+    y_data_3 = parse_rules(rules_cluster_3, 'consequents')
+    c_data_3 = rules_cluster_3['confidence'].tolist()
+    print('cluster 3 - rules')
+
     rules_cluster_4 = pd.read_csv('{0}/rules_cluster_4.csv'.format(data_path))
+    if (len(rules_cluster_4)>500000):
+        rules_cluster_4 =  rules_cluster_4[:500000]
+    x_data_4 = parse_rules(rules_cluster_4, 'antecedants')
+    y_data_4 = parse_rules(rules_cluster_4, 'consequents')
+    c_data_4 = rules_cluster_4['confidence'].tolist()
+    print('cluster 4 - rules')
+
     print('rules')
 
     matrix_cluster_1 = matrix_cosine('{0}/train_cluster_1.csv'.format(data_path))
@@ -223,30 +266,39 @@ if __name__ == "__main__":
     train_data = get_train_data()
     clusterer = KMeans(n_clusters=N_clusters).fit(train_data)
 
-    number_clients = len(clients_aisle)
+    number_clients = 300#len(clients_aisle)
     conf = []
     c_preds = clusterer.predict(clients_matrix)
     print('prediction')
     for c in range(number_clients):
         if (c_preds[c] == 0):
             Matrix_cos = matrix_cluster_1
-            rules = rules_cluster_1
+            x_data = x_data_1
+            y_data = y_data_1
+            c_data = c_data_1
         if (c_preds[c] == 1):
             Matrix_cos = matrix_cluster_2
             rules = rules_cluster_2
+            x_data = x_data_2
+            y_data = y_data_2
+            c_data = c_data_2
         if (c_preds[c] == 2):
             Matrix_cos = matrix_cluster_3
-            rules = rules_cluster_3
+            x_data = x_data_3
+            y_data = y_data_3
+            c_data = c_data_3
         if (c_preds[c] == 3):
             Matrix_cos = matrix_cluster_4
-            rules = rules_cluster_4
+            x_data = x_data_4
+            y_data = y_data_4
+            c_data = c_data_4
 
-        print('{0}/{1} - cluster{2} - rules = {3}'.format(c+1, number_clients, c_preds[c], len(rules)))
+        print('{0}/{1} - cluster{2} - rules = {3}'.format(c+1, number_clients, c_preds[c], len(x_data)))
 
         cos = get_recommendation_cos(Matrix_cos, clients_aisle_id[c], data_lbl)
         cos = list((set(cos) - set(clients_aisle[c])))
         print('len(cos)', len(cos))
-        result = get_recommendation(clients_aisle[c], cos, rules)
+        result = get_recommendation(clients_aisle[c], cos, x_data, y_data, c_data)
         print(result)
         conf.append(result)
 
