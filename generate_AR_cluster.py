@@ -4,7 +4,7 @@ from mlxtend.frequent_patterns import association_rules
 data_path = "E:\Projects\MBA_retail\\tmp"
 N_clusters = 4
 
-for i in range(1,2):
+for i in range(N):
     cluster = pd.read_csv('{0}/train_cluster_{1}.csv'.format(data_path, i+1))
     print('cluster',i+1,len(cluster))
     f_i_data = apriori(cluster, min_support=0.01, use_colnames=True)
