@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from copy import copy
 import csv
+
 stop_list = ['medium','canned','frozen'," ", ",", "%", "!", ".", "&", "oz", "/", "", "™", "®", "(", ")", ";", "*", "=", ":","@", "+", 'and',]
 stop_list+=['instant','baking','other','light','soft','red','spread','sparkling','packaged']
 stop_list+=['long', 'life']
@@ -81,12 +82,18 @@ for i in data_gros:
 
 lbl_gros = convert_name(label_gros_tmp)
 
+outfile = open('tmp/data/lbl_gros.csv','w')
+out = csv.writer(outfile)
+out.writerows(map(lambda xi: [xi], lbl_gros))
+outfile.close()
+
 cols = ["product_name_groc", "array_groc", "grocery_id"]
 
 data_all_grocery = pd.DataFrame(columns=cols)
 for i in range(len(lbl_gros)):
     data_all_grocery = data_all_grocery.append({'product_name_groc': label_gros_tmp[i], 'array_groc': lbl_gros[i], 'grocery_id':i+1}, ignore_index=True)
 
+data_all_grocery.to_csv('tmp/data/data_all_grocery.csv')
 
 data_path = "E:\Data\kaggle"
 orders = pd.read_csv('{0}/orders.csv'.format(data_path))
@@ -149,12 +156,18 @@ for i in data:
     data_words.append(data_words_tmp)
     data_words_tmp = []
 
+outfile = open('tmp/data/data_words.csv','w')
+out = csv.writer(outfile)
+out.writerows(map(lambda xi: [xi], data_words))
+outfile.close()
+
 data_name = data_tmp['product_name'].as_matrix()
-cols = ["product_name", "array_kaggle"]
+cols = ["product_name", "array_kaggle", 'kaggle_id']
 data_all_kaggle = pd.DataFrame(columns=cols)
 for i in range(len(data_name)):
-    data_all_kaggle = data_all_kaggle.append({'product_name': data_name[i], 'array_kaggle': data_words[i]}, ignore_index=True)
+    data_all_kaggle = data_all_kaggle.append({'product_name': data_name[i], 'array_kaggle': data_words[i], 'kaggle_id': (i+1)}, ignore_index=True)
 
+data_all_kaggle.to_csv('tmp/data/data_all_kaggle.csv')
 print("ok - 1")
 #get list of replaces
 cols = ["init", "replace"]
@@ -170,7 +183,11 @@ for i in unique_words:
                 replaces = replaces.append({'init': i, 'replace': j }, ignore_index=True)
                 if i in unique_words:
                     loc = unique_words.index(i)
+
                     unique_words_no_repeats[loc] = j
+
+replaces.to_csv('tmp/data/replaces.csv')
+
 print("ok-2")
 #replace
 data_words_tmp = copy(data_words)
@@ -207,14 +224,18 @@ for i in range(len(item)):
         list_weight = list_weight.append({'item': item[i], 'weight': 0}, ignore_index=True)
 
 list_weight = list_weight.sort_values(by='weight', ascending=False)
+list_weight.to_csv('tmp/data/list_weight.csv')
+
+
 print("ok-4")
 
+'''''''''
 #intersection with grocery
 tmp = []
 lbl_tmp = [['array_groc', 'data_words','weight']]
 lbl_tmp = []
 
-cols = ["array_groc", "array_kaggle", 'weight']
+cols = ["array_groc", "array_kaggle", 'weight', 'kaggle_id', 'grocery_id']
 lbl_weighted = pd.DataFrame(columns=cols)
 for lbl1 in lbl_gros:
     for lbl2 in data_words:
@@ -226,6 +247,11 @@ for lbl1 in lbl_gros:
                 t = list_weight.loc[list_weight['item'] == l]
                 t = t.as_matrix()
                 weight += t[0][1]
+
+                k_id = (data_all_kaggle.loc[data_all_kaggle['array_kaggle'] == lbl2]).as_matrix()
+                gr_id = (data_all_grocery.loc[data_all_grocery['array_groc'] == lbl1]).as_matrix()
+                print(k_id, gr_id)
+
                 lbl_weighted = lbl_weighted.append({'array_groc': lbl1, 'array_kaggle': lbl2, 'weight': weight},
                                                    ignore_index=True)
             lbl_tmp.append(tmp)
@@ -244,7 +270,6 @@ lbl_weighted = lbl_weighted.sort_values(by='weight', ascending=False)
 lbl_weighted.to_csv('tmp/lbl_weighted.csv')
 
 
-lbl_weighted.to_csv('tmp/lbl_weighted.csv')
 data_all_kaggle.to_csv('tmp/data_all_kaggle.csv')
 data_all_grocery.to_csv('tmp/data_all_grocery.csv')
 
@@ -264,11 +289,19 @@ for i in lnl:
 lbl_weighted = list_weight
 
 data_all_kaggle = pd.read_csv('tmp/data_all_kaggle.csv')
+data_all_kaggle = data_all_kaggle[['array_kaggle','product_name']]
 data_all_grocery = pd.read_csv('tmp/data_all_grocery.csv')
 
 
-_mt_ = pd.merge(lbl_weighted,data_all_kaggle, on = ['array_kaggle','array_kaggle'])
-print(len(_mt_), len(lbl_weighted), len(data_all_kaggle))
+
+print( lbl_weighted.head())
+print("=====")
+print(data_all_kaggle.head())
+
+_mt_ = pd.merge(data_all_grocery,data_all_kaggle, on = ['array_groc','array_groc'])
+print(len(_mt_), len(lbl_weighted), len(data_all_grocery))
+
+
 _mt_ = pd.merge(_mt_,data_all_grocery,on=['array_groc','array_groc'])
 print(len(_mt_), len(data_all_grocery))
 
@@ -290,3 +323,4 @@ print("ok - 5")
 #a = (data_tmp['product_name'].value_counts())
 #b =  data_tmp[['product_name', 'aisle']]
 #b.to_csv('tmp/com.csv')
+'''''

@@ -2,13 +2,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-flag = 1
+flag = 3
 if flag == 0:
     conf = pd.read_csv('tmp/confidence_clusters_v1.csv')
     plt.title('confidence_clusters')
-else:
+if flag == 1:
     conf = pd.read_csv('tmp/confidence_train_v1.csv')
     plt.title('confidence_train')
+if flag == 2:
+    conf = pd.read_csv('tmp/confidence_merge.csv')
+    plt.title('confidence_merge')
+if flag == 3:
+    conf = pd.read_csv('tmp/confidence_merge_clusters.csv')
+    plt.title('confidence_merge_clusters')
 
 conf = np.array(conf)
 # print("RESULT = ", sum / float(C))  # sum -> counter

@@ -41,7 +41,7 @@ def rename(init):
         aisles += t
     return aisles
 
-def get_crosstab_groc():
+def get_crosstab_groc(names):
     data_gros = readcsv(data_path + "/groceries.csv")
     data_groc = []
     for i in data_gros:
@@ -51,53 +51,50 @@ def get_crosstab_groc():
     indx = 1
     order_id = []
     aisles = []
+    not_in = []
+    in_in = []
     for i in data_groc:
         for j in i:
-            order_id.append(indx)
-            aisles.append(j)
+            if (j.lower() in names):
+                order_id.append(indx)
+                aisles.append(j)
+                if(j not in in_in):
+                    in_in.append(j)
+            else:
+                if(j not in not_in):
+                    not_in.append(j)
         indx += 1
 
-    aisles = rename(aisles)
+
     d = {'order_id': order_id, 'aisle': aisles}
     data_tmp = pd.DataFrame(data=d)
     data = pd.crosstab(data_tmp['order_id'], data_tmp['aisle'])
     return data
 
 def get_crosstab_kaggle():
-    data_path = "E:\Data\kaggle"
-    prior = pd.read_csv('{0}/order_products__train.csv'.format(data_path))
-    products = pd.read_csv('{0}/products.csv'.format(data_path))
-    aisles = pd.read_csv('{0}/aisles.csv'.format(data_path))
-    orders = pd.read_csv('{0}/orders.csv'.format(data_path))
-    mt = pd.merge(prior, products, on=['product_id', 'product_id'])
-    mt = pd.merge(mt, aisles, on=['aisle_id', 'aisle_id'])
-    mt = pd.merge(mt, orders, on=['order_id', 'order_id'])
-    cust_prod = pd.crosstab(mt['order_id'], mt['aisle'])  # user_id
-
-    return cust_prod
+    data_path_rules = "E:\Projects\MBA_retail\\tmp"
+    data = pd.read_csv('{0}/change_train.csv'.format(data_path_rules))
+    data = data.drop(columns=['order_id'])
+    return data
 
 if __name__ == "__main__":
 
-    data_groc = get_crosstab_groc()
-    print(len(data_groc))
+
 
     data_kaggle = get_crosstab_kaggle()
     print(len(data_kaggle))
+    names = (list(data_kaggle))
+    print(len(names))
 
-    # t = (list(data_groc))
-    # n = (list(data_kaggle))
-    # additional_items = (set(n) - set(t))
-    #
-    # sLength = len(data_groc)
-    # for i in additional_items:
-    #     data_groc[i] = pd.Series(0, index=data_groc.index)
+    data_groc = get_crosstab_groc(names)
+    print(len(data_groc))
+
 
 
     N_components = 50
 
     N_clusters = 4
     clusterer = KMeans(n_clusters=N_clusters).fit(data_groc)
-    print(type(clusterer))
     print("cluterer")
     c_preds = clusterer.predict(data_groc)
 
