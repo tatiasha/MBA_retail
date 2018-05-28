@@ -26,8 +26,8 @@ def get_all_clusters():
 
     print(len(K1), len(K2), len(K3), len(K4))
     K4 = concat_clusters(K4, G1)
-    K3 = concat_clusters(K3, G2)
-    K2 = concat_clusters(K2, G3)
+    K3 = concat_clusters(K3, G3)
+    K2 = concat_clusters(K2, G2)
     K1 = K1
 
     K4.to_csv('tmp/K4_table.csv')
@@ -51,8 +51,8 @@ def generate_rules(cluster, N, support):
 
 
 K1, K2, K3, K4 = get_all_clusters()
-#print(len(K1), len(K2), len(K3), len(K4))
-#generate_rules(K1,1,0.00001)
-#generate_rules(K2,2,0.0003)
-#generate_rules(K3,3,0.001)
-#generate_rules(K4,4,0.0002)
+print(len(K1), len(K2), len(K3), len(K4))
+generate_rules(K1,1,0.00001)
+generate_rules(K2,2,0.0003)
+generate_rules(K3,3,0.001)
+generate_rules(K4,4,0.0002)

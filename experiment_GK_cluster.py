@@ -268,11 +268,10 @@ if __name__ == "__main__":
     matrix_cluster_4,products_cos_4, names_4 = matrix_cosine('{0}/K4_table.csv'.format(data_path))
     print('matrix')
 
-    clusterer = KMeans(n_clusters=N_clusters).fit(train_data)
-
     number_clients = 300  # len(clients_aisle)
     conf = []
-    c_preds = clusterer.predict(clients_matrix)
+    c_preds = pd.read_csv("tmp/cluster_clients_prior.csv", header=None)
+    c_preds = c_preds[0].tolist()
     print('prediction')
     for c in range(number_clients):
         if (c_preds[c] == 0):
