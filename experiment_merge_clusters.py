@@ -279,6 +279,8 @@ if __name__ == "__main__":
             x_data = x_data_1
             y_data = y_data_1
             c_data = c_data_1
+            average_c = sum(c_data)/len(c_data)
+
             products_cos = products_cos_1
             names = names_1
         if (c_preds[c] == 1):
@@ -287,6 +289,8 @@ if __name__ == "__main__":
             x_data = x_data_2
             y_data = y_data_2
             c_data = c_data_2
+            average_c = sum(c_data)/len(c_data)
+
             products_cos = products_cos_2
             names = names_2
 
@@ -295,6 +299,8 @@ if __name__ == "__main__":
             x_data = x_data_3
             y_data = y_data_3
             c_data = c_data_3
+            average_c = sum(c_data)/len(c_data)
+
             products_cos = products_cos_3
             names = names_3
 
@@ -303,6 +309,8 @@ if __name__ == "__main__":
             x_data = x_data_4
             y_data = y_data_4
             c_data = c_data_4
+            average_c = sum(c_data)/len(c_data)
+
             products_cos = products_cos_4
             names = names_4
 
@@ -318,7 +326,7 @@ if __name__ == "__main__":
         cos = list((set(cos) - set(clients_aisle[c])))
         print('len(cos)', len(cos))
         result = get_recommendation(clients_aisle[c], cos, x_data, y_data, c_data)
-        print(result)
-        conf.append(result)
+        print(result/float(average_c))
+        conf.append(result/float(average_c))
 
-    np.savetxt("tmp/confidence_merge_clusters.csv", conf, delimiter=";")
+    np.savetxt("tmp/confidence_merge_clusters_average.csv", conf, delimiter=";")

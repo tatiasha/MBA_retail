@@ -233,6 +233,8 @@ if __name__ == "__main__":
     x_data = parse_rules(rules, 'antecedants')
     y_data = parse_rules(rules, 'consequents')
     c_data = rules['confidence'].tolist()
+    average_c = sum(c_data) / len(c_data)
+
     print('rules - ok', len(rules))
 
     C = 300#len(clients_aisle)
@@ -252,9 +254,9 @@ if __name__ == "__main__":
         cos = list((set(cos) - set(clients_aisle[i])))
         print('clients - {0}; cos - {1}'.format(len(clients_aisle[i]),len(cos)))
         result = get_recommendation(clients_aisle[i], cos, x_data, y_data, c_data)
-        print(result)
-        conf.append(result)
+        print(result/float(average_c))
+        conf.append(result/float(average_c))
 
     conf = np.sort(conf)
 
-    np.savetxt("tmp/confidence_merge.csv", conf, delimiter=";")
+    np.savetxt("tmp/confidence_merge_average.csv", conf, delimiter=";")

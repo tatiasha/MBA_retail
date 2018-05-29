@@ -10,13 +10,13 @@ if flag == 1:
     conf = pd.read_csv('tmp/confidence_train_v1.csv')
     plt.title('confidence_train')
 if flag == 2:
-    conf = pd.read_csv('tmp/confidence_merge.csv')
+    conf = pd.read_csv('tmp/confidence_merge_average.csv')
     plt.title('Altered train without clusters')
 if flag == 3:
-    conf = pd.read_csv('tmp/confidence_merge_clusters.csv')
+    conf = pd.read_csv('tmp/confidence_merge_clusters_average.csv')
     plt.title('Altered train with clusters')
 if flag == 4:
-    conf = pd.read_csv('tmp/confidence_GK_clusters.csv')
+    conf = pd.read_csv('tmp/confidence_GK_clusters_average.csv')
     plt.title('Altered train and grocery with clusters')
 
 conf = np.array(conf)
