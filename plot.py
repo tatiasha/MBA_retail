@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-flag = 2
+flag = 10
 if flag == 0:
     conf = pd.read_csv('tmp/confidence_clusters_v1.csv')
     plt.title('confidence_clusters')
@@ -18,14 +18,26 @@ if flag == 3:
 if flag == 4:
     conf = pd.read_csv('tmp/confidence_GK_clusters_average.csv')
     plt.title('Altered train and grocery with clusters')
+if flag == 5:
+    conf = pd.read_csv('tmp/prior_train_statistic.csv')
+    plt.title('Train and Prior')
+if flag == 6:
+    conf = pd.read_csv('tmp/prior_train_statistic_extend.csv')
+    plt.title('Extended train and Prior')
 
-conf = np.array(conf)
+#conf = np.array(conf)
+
 # print("RESULT = ", sum / float(C))  # sum -> counter
 # print("Zeros", c_zeroz, '/', C)
 # counter = Counter(conf)
 # X = counter.values()
 # Y = counter.keys()
-plt.hist(conf)
-plt.xlabel('confidence')
+conf1 = pd.read_csv('tmp/cleaned_groceries_statistics_5000_v2.csv').values
+conf2 = pd.read_csv('tmp/groc_statistic_5000_v2.csv').values
+plt.hist(conf1, alpha = 0.5, label = 'clean')
+plt.hist(conf2, alpha = 0.5, label = 'all')
+plt.legend()
+# plt.boxplot([conf1, conf2], labels=['train', 'extend'])
+plt.xlabel('')
 plt.ylabel('frequency')
 plt.show()
