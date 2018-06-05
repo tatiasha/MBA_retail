@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
 
 
-    data = pd.read_csv('{0}/changed_groc.csv'.format(data_path_rules))
+    data = pd.read_csv('{0}/change_train.csv'.format(data_path_rules))
     data_prior = pd.read_csv('{0}/change_prior.csv'.format(data_path_rules))
     data = data.drop(columns=['order_id'])
     data_prior = data_prior.drop(columns=['order_id'])
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     clients_aisle, clients_aisle_id , data_lbl = get_clients()
     print(len(clients_aisle))
 
-    rules = pd.read_csv('{0}/changed_groc_rules.csv'.format(data_path_rules))
+    rules = pd.read_csv('{0}/rules_change_train.csv'.format(data_path_rules))
     x_data = parse_rules(rules, 'antecedants')
     y_data = parse_rules(rules, 'consequents')
     c_data = rules['confidence'].tolist()
@@ -302,4 +302,4 @@ if __name__ == "__main__":
 
     conf = np.sort(conf)
 
-    np.savetxt("tmp/groc_statistic_5000_v2.csv", conf, delimiter=";")
+    np.savetxt("tmp/train_statistic_5000_v1.csv", conf, delimiter=";")

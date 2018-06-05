@@ -1,24 +1,20 @@
+import pandas as pd
 from mlxtend.frequent_patterns import apriori
 from mlxtend.frequent_patterns import association_rules
 from matplotlib import pyplot as plt
 import random
 import xlrd
+import numpy as np
 from sklearn.preprocessing import normalize
 import math
 from collections import Counter
 from scipy.spatial.distance import cosine
-import pandas as pd
-from mlxtend.frequent_patterns import apriori
-from mlxtend.frequent_patterns import association_rules
-import numpy as np
-from sklearn.cluster import KMeans
-import math
 import re
 def get_clients():
     data_path = "E:\Data\kaggle"
 
     data_prior = pd.read_csv('{0}/order_products__prior.csv'.format(data_path))
-    data_prior = data_prior[:50000]
+    data_prior = data_prior[:500000]
     data_order = pd.read_csv('{0}/orders.csv'.format(data_path))
     data_product = pd.read_csv('{0}/products.csv'.format(data_path))
 
@@ -60,7 +56,7 @@ def get_clients():
             tmp_array_id = [df[i][2]]
 
     print('clients - ok')
-    return clients_aisle, clients_aisle_id, data_lbl, data
+    return clients_aisle, clients_aisle_id, data_lbl
 
 def get_products(clients, rules, flag):
     # flag = 0: return list of recommendation
@@ -182,7 +178,7 @@ def get_recommendation(client, recommendations, x_data, y_data, c_data):
             recommendation_rules = recommendation_rules.append(
                 {'antecedants': x_data[r], 'consequents': y_data[r], 'confidence': c_data[r]}, ignore_index=True)
     # print(recommendation_rules.head())
-    result_confidence = get_products(client, recommendation_rules, 1)
+    result_confidence = get_products(client, recommendation_rules, 0)
     return result_confidence
 
 def parse_rules(rules, type):
@@ -199,19 +195,49 @@ def parse_rules(rules, type):
         x_data_r.append(x_d)
     return x_data_r
 
-def matrix_cosine(file_path):
+if __name__ == "__main__":
 
-    data = pd.read_csv(file_path)
+
+    data_path_rules = "E:\Projects\MBA_retail\\tmp"
+    #data_tmp = pd.read_csv('{0}/data_merge.csv'.format(data_path_rules))
+    #data_tmp_prior = pd.read_csv('{0}/data_merge_prior.csv'.format(data_path_rules))
+
+
+    data = pd.read_csv('{0}/extended_change_train.csv'.format(data_path_rules))
+    data_prior = pd.read_csv('{0}/change_prior.csv'.format(data_path_rules))
     data = data.drop(columns=['Unnamed: 0'])
+    data_prior = data_prior.drop(columns=['order_id'])
 
-    names = list(data)
     data_matrix = data.as_matrix()
+    data_matrix_prior = data_prior.as_matrix()
+    print('Files are read')
+
+    # df1 = data_tmp[['order_id', 'product_name_groc', 'product_id']]
+    # df1 = df1.sort_values(by=['order_id'])
+    names = (list(data))
+    # df = df1.as_matrix()
+    #
+    # df1_prior = data_tmp_prior[['order_id', 'product_name_groc', 'product_id']]
+    # df1_prior = df1_prior.sort_values(by=['order_id'])
+    names_prior = (list(data_prior))
+    # df_prior = df1_prior.as_matrix()
+
+
     N = len(data_matrix[0])
+    print(len(data_matrix), len(data_matrix[1]))
+    Matrix_cos = [[0 for x in range(N)] for y in range(N)]
+
+    N_prior = len(data_matrix_prior[0])
+    print(len(data_matrix_prior), len(data_matrix_prior[1]))
+    Matrix_cos_prior = [[0 for x in range(N_prior)] for y in range(N_prior)]
+
 
     cols = ["product_name", "N"]
     products_cos = pd.DataFrame(columns=cols)
+    products_cos_prior = pd.DataFrame(columns=cols)
 
-    Matrix_cos = [[0 for x in range(N)] for y in range(N)]
+    print("ok2")
+
     for i in range(N):
         products_cos = products_cos.append({'product_name':names[i], 'N':i},  ignore_index=True)
         for j in range(i, N):
@@ -220,112 +246,67 @@ def matrix_cosine(file_path):
             cosine = distCosine(i_i, j_j)
             Matrix_cos[i][j] = cosine
             Matrix_cos[j][i] = cosine
-    return Matrix_cos, products_cos, names
+    print('Matrix_cos - ok')
 
-def get_train_data():
-    data_path_rules = "E:\Projects\MBA_retail\\tmp"
-    data = pd.read_csv('{0}/change_train.csv'.format(data_path_rules))
-    data = data.drop(columns=['order_id'])
-    return data
+    for i in range(N_prior):
+        products_cos_prior = products_cos_prior.append({'product_name':names_prior[i], 'N':i},  ignore_index=True)
+        for j in range(i, N_prior):
+            i_i = data_matrix[:, i]
+            j_j = data_matrix[:, j]
+            cosine = distCosine(i_i, j_j)
+            Matrix_cos_prior[i][j] = cosine
+            Matrix_cos_prior[j][i] = cosine
+    print('Matrix_cos - ok - _prior')
 
-if __name__ == "__main__":
 
-    data_path = "E:\Projects\MBA_retail\\tmp"
-    clients_aisle, clients_aisle_id, data_lbl, clients_matrix = get_clients()
-    N_clusters = 4
-    print('rules_start')
-    rules_cluster_1 = pd.read_csv('{0}/rules_GK_cluster_1.csv'.format(data_path))
-    x_data_1 = parse_rules(rules_cluster_1, 'antecedants')
-    y_data_1 = parse_rules(rules_cluster_1, 'consequents')
-    c_data_1 = rules_cluster_1['confidence'].tolist()
-    print('cluser 1 - rules')
+    clients_aisle, clients_aisle_id , data_lbl = get_clients()
+    print(len(clients_aisle))
 
-    rules_cluster_2 = pd.read_csv('{0}/rules_GK_cluster_2.csv'.format(data_path))
-    x_data_2 = parse_rules(rules_cluster_2, 'antecedants')
-    y_data_2 = parse_rules(rules_cluster_2, 'consequents')
-    c_data_2 = rules_cluster_2['confidence'].tolist()
-    print('cluster 2 - rules')
+    rules = pd.read_csv('{0}/extended_change_train_rules.csv'.format(data_path_rules))
+    x_data = parse_rules(rules, 'antecedants')
+    y_data = parse_rules(rules, 'consequents')
+    c_data = rules['confidence'].tolist()
+    print('rules - ok', len(rules))
 
-    rules_cluster_3 = pd.read_csv('{0}/rules_GK_cluster_3.csv'.format(data_path))
-    x_data_3 = parse_rules(rules_cluster_3, 'antecedants')
-    y_data_3 = parse_rules(rules_cluster_3, 'consequents')
-    c_data_3 = rules_cluster_3['confidence'].tolist()
-    print('cluster 3 - rules')
+    rules_prior = pd.read_csv('{0}/rules_prior.csv'.format(data_path_rules))
+    x_data_prior = parse_rules(rules_prior, 'antecedants')
+    y_data_prior = parse_rules(rules_prior, 'consequents')
+    c_data_prior = rules_prior['confidence'].tolist()
 
-    rules_cluster_4 = pd.read_csv('{0}/rules_GK_cluster_4.csv'.format(data_path))
-    x_data_4 = parse_rules(rules_cluster_4, 'antecedants')
-    y_data_4 = parse_rules(rules_cluster_4, 'consequents')
-    c_data_4 = rules_cluster_4['confidence'].tolist()
-    print('cluster 4 - rules')
+    print('rules - ok', len(rules_prior))
 
-    print('rules')
+    #
+    C = 5000#len(clients_aisle)
 
-    train_data = get_train_data()
-
-    matrix_cluster_1,products_cos_1, names_1 = matrix_cosine('{0}/K1_table.csv'.format(data_path))
-    matrix_cluster_2,products_cos_2, names_2 = matrix_cosine('{0}/K2_table.csv'.format(data_path))
-    matrix_cluster_3,products_cos_3, names_3 = matrix_cosine('{0}/K3_table.csv'.format(data_path))
-    matrix_cluster_4,products_cos_4, names_4 = matrix_cosine('{0}/K4_table.csv'.format(data_path))
-    print('matrix')
-
-    number_clients = 300  # len(clients_aisle)
     conf = []
-    c_preds = pd.read_csv("tmp/cluster_clients_prior.csv", header=None)
-    c_preds = c_preds[0].tolist()
-    print('prediction')
-    for c in range(number_clients):
-        if (c_preds[c] == 0):
-            Matrix_cos = matrix_cluster_1
-            x_data = x_data_1
-            y_data = y_data_1
-            c_data = c_data_1
-            average_c = sum(c_data)/len(c_data)
-            products_cos = products_cos_1
-            names = names_1
-        if (c_preds[c] == 1):
-            Matrix_cos = matrix_cluster_2
-            rules = rules_cluster_2
-            x_data = x_data_2
-            y_data = y_data_2
-            c_data = c_data_2
-            average_c = sum(c_data)/len(c_data)
 
-            products_cos = products_cos_2
-            names = names_2
 
-        if (c_preds[c] == 2):
-            Matrix_cos = matrix_cluster_3
-            x_data = x_data_3
-            y_data = y_data_3
-            c_data = c_data_3
-            average_c = sum(c_data)/len(c_data)
-
-            products_cos = products_cos_3
-            names = names_3
-
-        if (c_preds[c] == 3):
-            Matrix_cos = matrix_cluster_4
-            x_data = x_data_4
-            y_data = y_data_4
-            c_data = c_data_4
-            average_c = sum(c_data)/len(c_data)
-
-            products_cos = products_cos_4
-            names = names_4
-
+    for i in range(C):
+        print(i + 1, '/', C)
         clients_aisle_id = []
-        for j in clients_aisle[c]:
+        for j in clients_aisle[i]:
             t = products_cos.loc[products_cos['product_name'] == j.lower()]
             t = t.as_matrix()
             t = t[0][1]
             clients_aisle_id.append(t)
-        print('{0}/{1} - cluster{2} - rules = {3}'.format(c + 1, number_clients, c_preds[c], len(x_data)))
-
         cos = get_recommendation_cos(Matrix_cos, clients_aisle_id, names)
-        cos = list((set(cos) - set(clients_aisle[c])))
-        print('len(cos)', len(cos))
-        result = get_recommendation(clients_aisle[c], cos, x_data, y_data, c_data)
-        print(result/float(average_c))
-        conf.append(result/float(average_c))
+        cos = list((set(cos) - set(clients_aisle[i])))
+        cos_prior = get_recommendation_cos(Matrix_cos_prior, clients_aisle_id, names_prior)
+        cos_prior = list((set(cos_prior) - set(clients_aisle[i])))
 
-    np.savetxt("tmp/confidence_GK_clusters_average.csv", conf, delimiter=";")
+        print('T clients - {0}; cos - {1}'.format(len(clients_aisle[i]),len(cos)))
+        print('P clients - {0}; cos - {1}'.format(len(clients_aisle[i]), len(cos_prior)))
+
+        result = get_recommendation(clients_aisle[i], cos, x_data, y_data, c_data)
+        result_prior = get_recommendation(clients_aisle[i], cos_prior, x_data_prior, y_data_prior, c_data_prior)
+
+        inter = len(list(set(result)&set(result_prior)))
+        union = len(list(set(result_prior+result)))
+        if union != 0:
+            print(float(inter)/ float(union))
+            conf.append(float(inter)/ float(union))
+
+
+    conf = np.sort(conf)
+
+    np.savetxt("tmp/train_groc_statistics_5000_v1.csv", conf, delimiter=";")

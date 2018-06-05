@@ -107,3 +107,35 @@ np.savetxt("tmp/cluster_clients_prior.csv", cluster, delimiter=";")
 
 print(len(cluster))
 
+
+
+#clust_prod = cust_prod.copy()
+#clust_prod['cluster'] = c_preds
+
+
+#cl1 = clust_prod[clust_prod['cluster']==3]
+#print(cl1)
+#cl1 = cl1.sort_values(ascending=False)
+#cl1 = cl1.to_frame()
+#mt_cl1 = cl1.join(mt_sort)
+#mt_cl1.to_csv('experi.csv', sep=';', encoding='utf-8')
+#mt_cl1.columns = ['a', 'b']
+#mt_cl1 = mt_cl1.sort_values(by=['b'],ascending=False)
+
+
+
+
+# for i in range(N_clusters):
+#     print("cluster #", i)
+#     print("Sort by second column")
+#     cl1 = clust_prod[clust_prod['cluster']==i].drop('cluster',axis=1).mean()
+#     cl1 = cl1.sort_values(ascending=False)
+#     cl1.to_csv('tmp/clustering_withoutPCA_'+'_c'+str(i)+'_aisle_sort_order.csv', sep=';', encoding='utf-8')
+#     print(cl1.head())
+#     cl1 = cl1.to_frame()
+#     mt_cl1 = cl1.join(mt_sort)
+#     mt_cl1.columns = ['a', 'b']
+#     mt_cl1 = mt_cl1.sort_values(by=['b'],ascending=False)
+#     #print("Sort by third column")
+#     #print(mt_cl1.head())
+#     mt_cl1.to_csv('tmp/clustering_withoutPCA_'+'_c'+str(i)+'_aisle_sort_global_order.csv', sep=';', encoding='utf-8')

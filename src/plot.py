@@ -32,10 +32,10 @@ if flag == 6:
 # counter = Counter(conf)
 # X = counter.values()
 # Y = counter.keys()
-conf1 = pd.read_csv('tmp/cleaned_groceries_statistics_5000_v2.csv').values
-conf2 = pd.read_csv('tmp/groc_statistic_5000_v2.csv').values
-plt.hist(conf1, alpha = 0.5, label = 'clean')
-plt.hist(conf2, alpha = 0.5, label = 'all')
+conf1 = pd.read_csv('tmp/train_statistic_5000_v1.csv').values
+conf2 = pd.read_csv('tmp/train_groc_statistics_5000_v1.csv').values
+plt.hist(conf1, alpha = 0.5, label = 'train', normed=True)
+plt.hist(conf2, alpha = 0.5, label = 'extend', normed=True)
 plt.legend()
 # plt.boxplot([conf1, conf2], labels=['train', 'extend'])
 plt.xlabel('')
