@@ -27,18 +27,20 @@ network = nx.Graph()
 for i in orders:
     #elems = i[0].split(' ') #for bakery
     elems = i[0].split(';') #for change_train
-
     network.add_edge(str(elems[0]), str(elems[1]), weight=int(elems[2]))
 
-print("Graph is completed with {0} orders".format(nx.number_of_nodes(network)))
+print("Graph is completed with {0} orders/nodes".format(nx.number_of_nodes(network)))
 
 # Louvain method
 # short description of method https://arxiv.org/pdf/0803.0476.pdf
+# more description https://www.quora.com/Is-there-a-simple-explanation-of-the-Louvain-Method-of-community-detection
+# theory about modularity https://www.cs.cmu.edu/~ckingsf/bioinfo-lectures/modularity.pdf
 parts = community.best_partition(network)
 values = [parts.get(node) for node in network.nodes()]
-com = []
+counter = 0
 
 for comm in set(values):
+    com = []
     print("Community {0}/{1} is preparing".format(comm+1, max(set(values))+1))
     for idx, c in parts.items():
         if c == comm:
@@ -56,14 +58,16 @@ for comm in set(values):
     orders_com = []
     for i in result:
         tmp = []
-        for j in range(1,len(i)-1):
+        for j in range(1, len(i)-1):
             if i[j] == 1:
                 tmp.append(lbls[j])
-        if(tmp != []):
-            orders_com.append(tmp)
+        orders_com.append(tmp)
 
     my_df_lbl = pd.DataFrame(orders_com)
     my_df_lbl.to_csv('{0}/com{1}_{2}_lbl.csv'.format(data_path, comm, name), index=False, header=False)
+    print(len(result), len(orders_com))
+    counter += len(result)
     print("Community {0}/{1} is completed with {2} orders".format(comm+1, 1+max(set(values)), len(orders_com)))
 
 print("Set of communities", set(values))
+print(counter, nx.number_of_nodes(network))
