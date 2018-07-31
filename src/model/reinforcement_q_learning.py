@@ -282,8 +282,8 @@ EPS_END = 0.05
 EPS_DECAY = 200
 TARGET_UPDATE = 10
 
-policy_net = DQN()#.to(device)
-target_net = DQN()#.to(device)
+policy_net = DQN().to(device)
+target_net = DQN().to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
@@ -365,7 +365,7 @@ def optimize_model():
     non_final_next_states = torch.cat([s for s in batch.next_state])
     state_batch = torch.cat(batch.state)
     action_batch = torch.cat(batch.action)
-    reward_batch = batch.reward #torch.cat(batch.reward)
+    reward_batch = batch.reward  # torch.cat(batch.reward)
 
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken

@@ -32,8 +32,9 @@ if flag == 6:
 # counter = Counter(conf)
 # X = counter.values()
 # Y = counter.keys()
-conf1 = pd.read_csv('tmp/train_statistic_5000_v1.csv').values
-conf2 = pd.read_csv('tmp/train_groc_statistics_5000_v1.csv').values
+data_path = "E:\Projects\MBA_retail\\tmp"
+conf1 = pd.read_csv('{0}/statistics result/train_statistic_5000_v1.csv'.format(data_path)).values
+conf2 = pd.read_csv('{0}/train_statistics_network.csv'.format(data_path)).values
 plt.hist(conf1, alpha = 0.5, label = 'train', normed=True)
 plt.hist(conf2, alpha = 0.5, label = 'extend', normed=True)
 plt.legend()
@@ -41,3 +42,6 @@ plt.legend()
 plt.xlabel('')
 plt.ylabel('frequency')
 plt.show()
+c2 = float(sum(conf2))/len(conf2)
+c1 = float(sum(conf1))/len(conf1)
+print(c2/c1)

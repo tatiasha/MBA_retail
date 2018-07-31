@@ -1,12 +1,15 @@
 from supermarket_model import Market
 
 env = Market()
-#env.reset()
-
-for i in range(10):
+env.reset()
+N = 100
+for i in range(N):
+    print(i)
     rew = env.step(i)
     print("new state = {}".format(env.state))
     print("reward = {}".format(rew))
+
+print(len(env.states))
 
 '''''''''
 rew = env.step(1)
