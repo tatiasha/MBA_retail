@@ -54,7 +54,6 @@ We'll also use the following from PyTorch:
 
 """
 
-import gym
 import math
 import random
 import numpy as np
@@ -70,11 +69,12 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 from supermarket_model import Market
+from torch.autograd import Variable
 import tensorflow as tf
 
 
 
-env = Market()#gym.make('CartPole-v0').unwrapped
+env = Market()
 
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()
@@ -208,27 +208,13 @@ class DQN(nn.Module):
 
     def __init__(self):
         super(DQN, self).__init__()
-        # self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-        # self.bn1 = nn.BatchNorm2d(16)
-        # self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        # self.bn2 = nn.BatchNorm2d(32)
-        # self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-        # self.bn3 = nn.BatchNorm2d(32)
         self.l1 = nn.Linear(51, 256)
         self.l2 = nn.Linear(256, 51)
 
-
-
-
     def forward(self, x):
-        #x = torch.tensor(x, dtype=torch.long)
-        r = self.l1(x)
-        #x = torch.tensor(r, dtype=torch.int64)
-
-        x = F.relu(r)
-        #x = F.relu(self.l2(x))
-        #x = F.relu(self.bn3(self.conv3(x)))
-        return x#self.head(x.view(x.size(0), -1))
+        x = F.relu(self.l1(x))
+        x = F.relu(self.l2(x))
+        return x
 
 
 
@@ -275,7 +261,7 @@ resize = T.Compose([T.ToPILImage(),
 #    episode.
 #
 
-BATCH_SIZE = 8 #128
+BATCH_SIZE = 128
 GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
@@ -288,23 +274,11 @@ target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
 optimizer = optim.RMSprop(policy_net.parameters())
-memory = ReplayMemory(10000)
+memory = ReplayMemory(500)
 
 
 steps_done = 0
 
-
-def select_action(state):
-    global steps_done
-    sample = random.random()
-    eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-        math.exp(-1. * steps_done / EPS_DECAY)
-    steps_done += 1
-    if sample > eps_threshold:
-        with torch.no_grad():
-            return policy_net(state).max(1)[1].view(1, 1)
-    else:
-        return torch.tensor([[random.randrange(2)]], device=device, dtype=torch.long)
 
 
 episode_durations = []
@@ -361,30 +335,42 @@ def optimize_model():
     batch = Transition(*zip(*transitions))
 
     # Compute a mask of non-final states and concatenate the batch elements
-    non_final_mask = batch.next_state#torch.tensor(batch.next_state, device=device, dtype=torch.uint8)
-    non_final_next_states = torch.cat([s for s in batch.next_state])
-    state_batch = torch.cat(batch.state)
-    action_batch = torch.cat(batch.action)
+
+
+    #state_batch = torch.cat(batch.state)
+    state_batch = batch.state
+    #action_batch = torch.cat(batch.action)
+    action_batch = batch.action
+    next_state_batch = batch.next_state
+
     reward_batch = batch.reward  # torch.cat(batch.reward)
 
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken
-    state_action_values = policy_net(state_batch).gather(1, action_batch)
+
+    state_batch = torch.tensor(state_batch, dtype = torch.float32)
+    action_batch = torch.tensor(action_batch, dtype=torch.float32)
+
+
+    state_action_values = policy_net(state_batch)#.gather(1, action_batch)
 
     # Compute V(s_{t+1}) for all next states.
     next_state_values = torch.zeros(BATCH_SIZE, device=device)
-    next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
+    next_state_values = target_net(torch.tensor(batch.next_state, dtype=torch.float32)).max(1)[0].detach()
     # Compute the expected Q values
-    expected_state_action_values = (next_state_values * GAMMA) + reward_batch
-
+    expected_state_action_values = (next_state_values * GAMMA) + torch.tensor(reward_batch, dtype=torch.float32)
+    state_action_values = state_action_values.max(1)[0].detach()
     # Compute Huber loss
-    loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+
+    loss = F.smooth_l1_loss(Variable(state_action_values.data, requires_grad=True), expected_state_action_values)
+    #Variable(state_action_values.data, requires_grad=True)
 
     # Optimize the model
     optimizer.zero_grad()
     loss.backward()
     for param in policy_net.parameters():
-        param.grad.data.clamp_(-1, 1)
+        if param.grad is not None:
+            param.grad.data.clamp_(-1, 1)
     optimizer.step()
 
 
@@ -400,7 +386,7 @@ def optimize_model():
 # the notebook and run lot more epsiodes.
 #
 
-num_episodes = 200
+num_episodes = 5000
 env.reset()
 rew = []
 average = []
@@ -419,9 +405,9 @@ for i_episode in range(num_episodes):
 
     next_state = env.get_vector_state(i_episode+1)  # new state
 
-    state = torch.tensor(state, dtype = torch.int64)
-    action = torch.tensor(action, dtype = torch.int64)
-    next_state = torch.tensor(next_state, dtype = torch.int64)
+    #state = torch.tensor(state, dtype = torch.int64)
+    #action = torch.tensor(action, dtype = torch.int64)
+    #next_state = torch.tensor(next_state, dtype = torch.int64)
 
     print(i_episode)
     memory.push(state, action, next_state, reward)
