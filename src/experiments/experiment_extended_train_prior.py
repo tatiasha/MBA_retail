@@ -164,7 +164,6 @@ def get_recommendation_cos(Matrix_cos, client, df_lbl):
 def get_recommendation(client, recommendations, x_data, y_data, c_data):
     col_names = ['antecedants', 'consequents', 'confidence']
     recommendation_rules = pd.DataFrame(columns=col_names)
-
     # x_data = rules['antecedants'].tolist()
     # x_data = [list(_x) for _x in x_data]
     # y_data = rules['consequents'].tolist()
@@ -203,8 +202,12 @@ if __name__ == "__main__":
     #data_tmp_prior = pd.read_csv('{0}/data_merge_prior.csv'.format(data_path_rules))
 
 
-    data = pd.read_csv('{0}/extended_change_train.csv'.format(data_path_rules))
-    data_prior = pd.read_csv('{0}/change_prior.csv'.format(data_path_rules))
+    #data = pd.read_csv('{0}/integrated_train_network.csv'.format(data_path_rules))
+    data = pd.read_csv('{0}/datasets/extended_change_train.csv'.format(data_path_rules))
+
+    #data = data.drop(columns=['order_id'])
+
+    data_prior = pd.read_csv('{0}/datasets/change_prior.csv'.format(data_path_rules))
     data = data.drop(columns=['Unnamed: 0'])
     data_prior = data_prior.drop(columns=['order_id'])
 
@@ -225,11 +228,16 @@ if __name__ == "__main__":
 
     N = len(data_matrix[0])
     print(len(data_matrix), len(data_matrix[1]))
+    print(names)
     Matrix_cos = [[0 for x in range(N)] for y in range(N)]
 
     N_prior = len(data_matrix_prior[0])
     print(len(data_matrix_prior), len(data_matrix_prior[1]))
+    print(names_prior)
+
     Matrix_cos_prior = [[0 for x in range(N_prior)] for y in range(N_prior)]
+
+
 
 
     cols = ["product_name", "N"]
@@ -251,8 +259,8 @@ if __name__ == "__main__":
     for i in range(N_prior):
         products_cos_prior = products_cos_prior.append({'product_name':names_prior[i], 'N':i},  ignore_index=True)
         for j in range(i, N_prior):
-            i_i = data_matrix[:, i]
-            j_j = data_matrix[:, j]
+            i_i = data_matrix_prior[:, i]
+            j_j = data_matrix_prior[:, j]
             cosine = distCosine(i_i, j_j)
             Matrix_cos_prior[i][j] = cosine
             Matrix_cos_prior[j][i] = cosine
@@ -262,13 +270,13 @@ if __name__ == "__main__":
     clients_aisle, clients_aisle_id , data_lbl = get_clients()
     print(len(clients_aisle))
 
-    rules = pd.read_csv('{0}/extended_change_train_rules.csv'.format(data_path_rules))
+    rules = pd.read_csv('{0}/rules/extended_change_train_rules.csv'.format(data_path_rules))
     x_data = parse_rules(rules, 'antecedants')
     y_data = parse_rules(rules, 'consequents')
     c_data = rules['confidence'].tolist()
     print('rules - ok', len(rules))
 
-    rules_prior = pd.read_csv('{0}/rules_prior.csv'.format(data_path_rules))
+    rules_prior = pd.read_csv('{0}/rules/rules_prior.csv'.format(data_path_rules))
     x_data_prior = parse_rules(rules_prior, 'antecedants')
     y_data_prior = parse_rules(rules_prior, 'consequents')
     c_data_prior = rules_prior['confidence'].tolist()
@@ -299,14 +307,16 @@ if __name__ == "__main__":
 
         result = get_recommendation(clients_aisle[i], cos, x_data, y_data, c_data)
         result_prior = get_recommendation(clients_aisle[i], cos_prior, x_data_prior, y_data_prior, c_data_prior)
-
-        inter = len(list(set(result)&set(result_prior)))
+        print(result_prior, result)
+        inter = len(list(set(result) & set(result_prior)))
         union = len(list(set(result_prior+result)))
         if union != 0:
-            print(float(inter)/ float(union))
-            conf.append(float(inter)/ float(union))
+            print(float(inter) / float(union))
+            conf.append(float(inter) / float(union))
+        else:
+            print("0")
 
 
     conf = np.sort(conf)
 
-    np.savetxt("tmp/train_groc_statistics_5000_v1.csv", conf, delimiter=";")
+    np.savetxt("{0}/change_train_statistics_update_v2.csv".format(data_path_rules), conf, delimiter=";")
