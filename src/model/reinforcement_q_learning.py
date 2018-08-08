@@ -58,11 +58,8 @@ class DQN(nn.Module):
         return x
 
 
-BATCH_SIZE = 256
-GAMMA = 0.999
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 200
+BATCH_SIZE = 200
+GAMMA = 0.9
 TARGET_UPDATE = 10
 
 policy_net = DQN()
@@ -71,12 +68,12 @@ target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
 optimizer = optim.RMSprop(policy_net.parameters())
-memory = ReplayMemory(300)
+memory = ReplayMemory(500)
 
 def plot_durations(ave):
     plt.clf()
     rewards = torch.tensor(rew, dtype=torch.float)
-    plt.plot(rewards.numpy(), label = 'reward')
+    plt.plot(rewards.numpy(), label='reward')
     plt.title('Training...')
     plt.xlabel('Client')
     plt.ylabel('Reward')
@@ -116,7 +113,7 @@ num_episodes = 50000
 env.reset()
 rew = []
 average = []
-n = np.random.randint(1, 500)
+n = np.random.randint(0, 100)
 state = env.get_vector_state(n)
 for i_episode in range(num_episodes):
     reward = env.step(n)  # do action
@@ -124,7 +121,7 @@ for i_episode in range(num_episodes):
     rew.append(reward)
     average.append(np.mean(rew))
     reward = torch.tensor([reward])
-    n = np.random.randint(1, 500)
+    n = np.random.randint(0, 100)
     next_state = env.get_vector_state(n)  # new state
     print(i_episode)
     memory.push(state, action, next_state, reward)

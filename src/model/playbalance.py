@@ -1,6 +1,8 @@
-from supermarket_model import Market
+from model_v2 import Market
+from model_v2 import Client
 
-env = Market()
+agent = Market()
+env = Client(agent)
 env.reset()
 N = 100
 for i in range(N):

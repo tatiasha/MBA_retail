@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import math
 import re
+import random
 data_path_rules = "E:\Projects\MBA_retail\\tmp\\rules"
 data_path = "E:\Data\kaggle"
 changed_data_path = "E:\Projects\MBA_retail\\tmp"
@@ -35,7 +36,7 @@ def get_clients():
 
     N = len(data)
     clients_aisle = []
-    clients_aisle_id = []
+    # clients_aisle_id = []
     tmp_array = [df[0][1]]
     tmp_array_id = [df[0][2]]
 
@@ -46,7 +47,7 @@ def get_clients():
 
         else:
             clients_aisle.append(tmp_array)
-            clients_aisle_id.append(tmp_array_id)
+            # clients_aisle_id.append(tmp_array_id)
 
             tmp_array = [df[i][1]]
             tmp_array_id = [df[i][2]]
@@ -89,7 +90,7 @@ def get_products(clients, rules):
     recommendation = [item for sublist in recommendation for item in sublist]
     recommendation = list(set(recommendation))
 
-    return recommendation, selected_2
+    return recommendation, prob #selected_2
 
 def get_recommendation(client, recommendations, x_data, y_data, c_data):
     col_names = ['antecedants', 'consequents', 'confidence']
@@ -178,35 +179,90 @@ def get_rules():
     return x_data_prior, y_data_prior, c_data_prior
 
 
-class Market:
-    def __init__(self):
-        self.data, self.names = [], []
-        self.matrix_cos_model = []
-        self.states = []
-        self.x_data_model, self.y_data_model, self.c_data_model = [],[],[]
+class Client:
+    def __init__(self, agent):
+        self.agent = agent
         self.state = []
-        self.clients_aisle_id = []
-        self.action = []
-        #self.f()
+        self.reward = -1.0
+        self.states = []
+        self.state = []
+        self.actions = dict()
+        self.vector_states = []
 
 
     def get_state(self, prev):
-        if (prev+1 >= len(self.states) - 1):
-            print("Error. Only {0} clients available".format(len(self.states - 1)))
+        if (prev >= len(self.states) - 1):
+            print("Error. Only {0} clients available".format(len(self.states) - 1))
         else:
-            return self.states[prev+1]
+            return self.states[prev]
 
-    def get_vector_state(self, prev):
-        s = self.get_state(prev)
-        return self.convert_to_vector(s)
+    def get_vector_states(self):
+        for i in self.states:
+            self.vector_states.append(self.agent.convert_to_vector(i))
 
-    def f(self):
-        global products_cos
-        for j in self.state:
-            t = products_cos.loc[products_cos['product_name'] == j.lower()]
-            t = t.as_matrix()
-            t = t[0][1]
-            self.clients_aisle_id.append(t)
+    def step(self, prev, action_model):
+        self.state = self.get_state(prev)
+        if prev not in self.actions:
+            action = self.agent.recommendation(self.state)
+            self.actions.update({prev: action})
+            ac = action
+        else:
+            ac = self.actions[prev]
+
+        am = np.array(action_model)
+        rew = 0.0
+        for i in range(len(ac)):
+            rew += abs(ac[i]-am[i])*abs(ac[i]-am[i])
+        self.reward = 1.0/rew
+        # inter = 0
+        # for i in range(len(ac)):
+        #     rnd = random.uniform(0, 1)
+        #     if am[i] < rnd and self.vector_states[prev][i] == 0:
+        #         am[i] = 1
+        #     else:
+        #         am[i] = 0
+        #     if self.vector_states[prev][i] == 1:
+        #         ac[i] = 0
+        #
+        #     if ac[i] == am[i]:
+        #         inter += 1
+        # # inter = sum(ac & am)
+        # print(am)
+        # if sum(ac) != 0:
+        #     precision = float(inter) / sum(ac)
+        # else:
+        #     precision = 0
+        #
+        # if sum(am) != 0:
+        #     recall = float(inter)/float(sum(am))
+        # else:
+        #     recall = 0
+        #
+        # if precision+recall != 0:
+        #     self.reward = 2*precision*recall/(precision+recall)
+        # else:
+        #     self.reward = 0
+
+        return self.reward
+
+    def reset(self):
+        self.state = []
+        self.reward = -1.0
+        self.states = []
+        self.state = []
+        self.actiona = dict()
+        self.agent.reset()
+        self.states = get_clients()
+        self.vector_states = []
+        self.get_vector_states()
+
+
+class Market:
+    def __init__(self):
+        self.x_data_model, self.y_data_model, self.c_data_model = [], [], []
+        self.matrix_cos_model = []
+        self.data, self.names = [], []
+        self.clients_aisle_id = []
 
     def convert_to_vector(self, set_products):
         res = [0 for i in self.names]
@@ -214,14 +270,15 @@ class Market:
             res[self.names.index(i)] = 1
         return res
 
-    def step(self, time_step):
-        self.state = self.get_state(time_step)
-
+    def recommendation(self, state):
+        self.state = state
+        self.f()
         cos_recommendation = get_recommendation_cos(self.matrix_cos_model, self.clients_aisle_id, self.names)
-        cos_recommendation = list((set(cos_recommendation) - set(self.state)))
+        cos_recommendation = list((set(cos_recommendation) - set(state)))
 
-        model_recommendation, reward = get_recommendation(self.state, cos_recommendation, self.x_data_model, self.y_data_model, self.c_data_model)
-        self.action = model_recommendation + self.state
+        model_recommendation, reward = get_recommendation(state, cos_recommendation, self.x_data_model, self.y_data_model, self.c_data_model)
+        self.action = model_recommendation #+ self.state
+
         self.action = self.convert_to_vector(self.action)
 
         #inter = len(list(set(recommendation) & set(model_recommendation)))
@@ -231,14 +288,21 @@ class Market:
 
         #self.state = self.convert_to_vector(self.state)
 
-        return reward
+        return self.action
+
+    def f(self):
+        global products_cos
+        for j in self.state:
+            t = products_cos.loc[products_cos['product_name'] == j.lower()]
+            t = t.as_matrix()
+            t = t[0][1]
+
+            self.clients_aisle_id.append(t)
 
     def reset(self):
         self.data, self.names = get_data()
         self.matrix_cos_model = get_matrix(self.data, self.names)
-        self.states = get_clients()
         self.x_data_model, self.y_data_model, self.c_data_model = get_rules()
-        self.state = self.get_state(0)
         self.clients_aisle_id = []
-        self.f()
-        self.action = []
+        #self.action = []
+        self.state = []
