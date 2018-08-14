@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 # -*- coding: utf-8 -*-
 import random
 import numpy as np
@@ -9,11 +12,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from model_v2 import Market
-from model_v2 import Client
+from model_v3 import Market
+from model_v3 import Client
 
 from torch.autograd import Variable
-N_components = 25
+N_components = 51
 agent = Market()
 env = Client(agent, N_components)
 
@@ -76,39 +79,6 @@ target_net.eval()
 optimizer = optim.RMSprop(policy_net.parameters())
 memory = ReplayMemory(1000)
 
-def plot_durations(ave, ave_all):
-    plt.figure(2)
-    plt.clf()
-    rewards = torch.tensor(rew, dtype=torch.float)
-    plt.title('Training...')
-    plt.ylabel('Value')
-    plt.plot(rewards.numpy(), label='reward', color='grey')
-    # Take 100 episode averages and plot them too
-    plt.plot(ave, label="average reward(last 10)", color='blue')
-    plt.plot(ave_all, label="average reward", color='red')
-    plt.legend()
-
-    plt.pause(0.001)  # pause a bit so that plots are updated
-    if is_ipython:
-        display.clear_output(wait=True)
-        display.display(plt.gcf())
-    #plt.savefig('E:\\result.png')
-
-    # plt.clf()
-    # rewards = torch.tensor(rew, dtype=torch.float)
-    # plt.plot(rewards.numpy(), label='reward')
-    # plt.title('Training...')
-    # plt.xlabel('Client')
-    # plt.ylabel('Reward')
-    # plt.plot(ave, label="average reward")
-    # plt.legend()
-    # plt.pause(0.001)  # pause a bit so that plots are updated
-    # if is_ipython:
-    #     display.clear_output(wait=True)
-    #     display.display(plt.gcf())
-    # plt.savefig('E:\\result.png')
-
-
 def select_action(state):
     global steps_done
     sample = random.random()
@@ -150,49 +120,25 @@ def optimize_model():
     optimizer.step()
 
 
-num_episodes = 2500
+num_episodes = 2000
 env.reset()
 rew = []
 average = []
 average_all = []
-
-for i_episode in range(num_episodes):
-    n = np.random.randint(0, 500)
-    if N_components < 51:
-        state = env.transform_states[n]
-    else:
-        state = env.vector_states[n]
-
+purchasing = []
+target = []
+for i_episode in range(2000, 3000):
+    n = i_episode
+    state = env.vector_states[n]
     action = select_action(state)
-
     reward, r_next_state, p_rec = env.step(n, action)
+    purchasing.append(state)
+    target.append(p_rec)
+    print(i_episode)
     next_state = r_next_state + state
-    rew.append(reward)
-    average.append(np.mean(rew[-10:]))
-    average_all.append(np.mean(rew))
-
     reward = torch.tensor([reward])
-    # next_state = action + state#env.vector_states[n]  # new state
-    print('N', i_episode, 'reward = ', reward, 'average reward = ', np.mean(rew[-10:]))
-    print('state')
-    print(state)
-    print('prior')
-    print(p_rec)
-    print('action')
-    print((r_next_state))
-    print('action_real')
-    print((action))
-    print('next state')
-    print((next_state))
 
-    memory.push(state, action, next_state, reward)
-    optimize_model()
-    plot_durations(average, average_all)
-    # Update the target network
-if i_episode % TARGET_UPDATE == 0:
-    target_net.load_state_dict(policy_net.state_dict())
-
-print('Complete')
-print("Average reward for {0} components{1}".format(N_components, np.mean(rew)))
-
-plt.show()
+result = pd.DataFrame()
+result['Purchasing'] = purchasing
+result["Target"] = target
+result.to_csv("E:\Projects\MBA_retail\\x_target_2.csv")

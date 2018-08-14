@@ -259,22 +259,18 @@ class Client:
         if sum(r1) == 0 and w_1_c == 0:
             self.reward = 1 - wx
             w_1_c = w_0_c = -1
-            print("w0 - {0}; w1 - {1}; wx - {2}".format(w_0_c, w_1_c, wx))
             return self.reward, r, r1
         if sum(r1) != 0 and w_1_c == 0:
             self.reward = (1 - wx) / sum(r1)
             w_1_c = w_0_c = -1
-            print("w0 - {0}; w1 - {1}; wx - {2}".format(w_0_c, w_1_c, wx))
             return self.reward, r, r1
         if w_0_c == 0:
             self.reward = 1 - wx
             w_0_c = w_1_c = -1
-            print("w0 - {0}; w1 - {1}; wx - {2}".format(w_0_c, w_1_c, wx))
             return self.reward, r, r1
         w_0_c = w_0_c / (len(r1) - sum(r1))
         w_1_c = w_1_c / sum(r1)
         self.reward = 2*w_1_c*w_0_c/(w_1_c+w_0_c)
-        print("w0 - {0}; w1 - {1}; wx - {2}".format(w_0_c, w_1_c, wx))
         return self.reward, r, r1
 
     def step(self, prev, action_model):
