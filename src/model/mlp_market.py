@@ -23,18 +23,26 @@ train_dataset = train_dataset.values
 X = convert_to_list(purchasing)
 y = convert_to_list(target)
 
-p = X[1550:1600]
-r = y[1550:1600]
+p = X[1500:]
+r = y[1500:]
 X = X[:1500]
 y = y[:1500]
 
-#clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(64, 32), random_state=1)
-clf = DecisionTreeClassifier(random_state=2)
+clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(64, 32), random_state=1)
+#clf = DecisionTreeClassifier(random_state=2)
 clf.fit(X, y)
 t = clf.predict(p)
 #print(clf.score(X, y))
 print("=====")
+correct = 0.0
+
 for i in range(len(t)):
     print(np.array(t[i]))
     print(np.array(r[i]))
+    if sum(t[i] == r[i]) == 51:
+            correct += 1
+            print("Ok")
     print("===")
+
+print('Accuracy of the network on the {0} test clients: {1}%'.format(len(t),
+                                                                         (100*correct / len(t))))

@@ -120,7 +120,7 @@ def optimize_model():
     optimizer.step()
 
 
-num_episodes = 2000
+num_episodes = 6000
 env.reset()
 rew = []
 average = []

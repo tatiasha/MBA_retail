@@ -13,7 +13,7 @@ from model_v2 import Market
 from model_v2 import Client
 
 from torch.autograd import Variable
-N_components = 25
+N_components = 45
 agent = Market()
 env = Client(agent, N_components)
 
