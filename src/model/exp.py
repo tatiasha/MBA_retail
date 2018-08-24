@@ -52,7 +52,7 @@ class Net(nn.Module):
 if __name__ == '__main__':
     data_path = "E:\Projects\MBA_retail\\tmp"
     global_data_path = "E:\Projects\MBA_retail\\tmp\datasets"
-    data = pd.read_csv('{0}\\x_target.csv'.format(data_path))
+    data = pd.read_csv('{0}\\x_target_3.csv'.format(data_path))
     data = data.drop(columns=['Unnamed: 0'])
     purchasing = data['Purchasing'].values
     target = data['Target'].values
@@ -60,12 +60,13 @@ if __name__ == '__main__':
     y = convert_to_list(target)
     batch_size = 20
 
-    inputs_train = X[:1500]
-    labels_train = y[:1500]
+    inputs_train = X[:5000]
+    labels_train = y[:5000]
 
     inp = []
     lbl = []
-    for i in range(len(inputs_train)):
+    train_size = 30000
+    for i in range(train_size):
         tmp_inp = []
         tmp_lbl = []
         idx = [np.random.randint(0, 1500) for j in range(batch_size)]
@@ -77,23 +78,23 @@ if __name__ == '__main__':
     inputs_train = torch.tensor(inp, dtype=torch.float32)
     labels_train = torch.tensor(lbl, dtype=torch.float32)
 
-    inputs_test = X[1500:]
+    inputs_test = X[5000:]
     inputs_test = torch.tensor(inputs_test, dtype=torch.float32)
 
-    labels_test = y[1500:]
+    labels_test = y[5000:]
     labels_test = torch.tensor(labels_test, dtype=torch.float32)
 
     net = Net()
     # CosineEmbeddingLoss
     # CrossEntropyLoss
     criterion = nn.L1Loss()
-    optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=0.01)
     # optimizer = optim.LBFGS(net.parameters(), lr=0.0001)
 
-    for epoch in range(10):  # loop over the dataset multiple times
+    for epoch in range(5):  # loop over the dataset multiple times
 
         running_loss = 0.0
-        for i in range(len(inputs_train)):
+        for i in range(train_size):
             # get the inputs
             inputs = inputs_train[i]
             labels = labels_train[i]
@@ -116,12 +117,6 @@ if __name__ == '__main__':
                 running_loss = 0.0
 
     print('Finished Training')
-
-
-    ########################################################################
-    # The results seem pretty good.
-    #
-    # Let us look at how the network performs on the whole dataset.
 
     correct = 0
     images = inputs_test

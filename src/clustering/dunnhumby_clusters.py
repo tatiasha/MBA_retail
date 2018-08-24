@@ -1,7 +1,7 @@
 import pandas as pd
-
+import numpy as np
 def get_clusters(n_clusters):
-    data_path = "E:\Data\dunnhumby"
+    data_path = "/home/niggaplease/Documents/Tatiana/dunnhumby"
     transactions = pd.read_csv('{0}/transaction_data.csv'.format(data_path))
     clients_information = pd.read_csv('{0}/hh_demographic.csv'.format(data_path))
     products_name = pd.read_csv('{0}/product.csv'.format(data_path))
@@ -48,11 +48,14 @@ def get_clusters(n_clusters):
         for key in list(clusters_len.keys()):
            if clusters_len[key] == max(clusters_len.values()):
                clusters_res.update({n_c: clusters[key]})
+               clusters[key].to_csv("/home/niggaplease/Documents/Tatiana/MBA_retail/tmp/tmp_clusters_d/cluster{0}_dunnhumby.csv".format(n_c))
+               print(n_c)
                del clusters_len[key]
     print("ok - 1")
     df = pd.DataFrame()
     for key in list(clusters_len.keys()):
         df = df.append(clusters[key])
+    df.to_csv("/home/niggaplease/Documents/Tatiana/MBA_retail/tmp/tmp_clusters_d/cluster{0}_dunnhumby.csv".format(n_clusters-1))
     print("ok - 2")
     clusters_res.update({n_clusters - 1: df})
     return clusters_res
@@ -60,7 +63,8 @@ def get_clusters(n_clusters):
 
 
 if __name__ == "__main__":
-    data_path = "E:\Data\dunnhumby"
+
+    data_path = "/home/niggaplease/Documents/Tatiana/dunnhumby"
     transactions = pd.read_csv('{0}/transaction_data.csv'.format(data_path))
     clients_information = pd.read_csv('{0}/hh_demographic.csv'.format(data_path))
     products_name = pd.read_csv('{0}/product.csv'.format(data_path))
@@ -70,28 +74,32 @@ if __name__ == "__main__":
     ids = list(total['PRODUCT_ID'].unique())
     print(len(ids))
 
-    data_path = 'E:\Projects\MBA_retail\\tmp'
-    g = get_clusters(10)
+    data_path = '/home/niggaplease/Documents/Tatiana/MBA_retail/tmp'
+    g = get_clusters(20)
     l = [len(i) for i in g.values()]
     print(l)
-    i_c = 0
-    for cluster in g.keys():
-        i_c += 1
-        cluster = g[cluster]
-        cluster = cluster[['BASKET_ID', 'PRODUCT_ID']]
-        cluster = cluster.sort_values(by=['BASKET_ID'], ascending=False)
-        cluster = cluster.values
-        orders = [[0 for x in range(len(ids))] for y in range(len(cluster))]
-        orders[0][ids.index(cluster[0][1])] = 1
-        orders_counter = 0
-        print(len(cluster))
-        for i in range(1, len(cluster)):
-            if cluster[i][0] == cluster[i-1][0]:
-                orders[orders_counter][ids.index(cluster[i][1])] = 1
-            else:
-                orders_counter += 1
-                orders[orders_counter][ids.index(cluster[i][1])] = 1
-
-        df = pd.DataFrame(orders, columns=ids)
-        df.to_csv("{0}\cluster{1}_dunnhumby.csv".format(data_path, i_c))
-    print(len(g), l)
+    # i_c = 0
+    # for cluster in g.keys():
+    #     i_c += 1
+    #     cluster = g[cluster]
+    #     cluster = cluster[['BASKET_ID', 'PRODUCT_ID']]
+    #     cluster = cluster.sort_values(by=['BASKET_ID'], ascending=False)
+    #     cluster = cluster.values
+    #     # orders = [[0 for x in range(len(ids))] for y in range(len(cluster))]
+    #     print("1")
+    #     orders = np.array([[0 for x in range(len(ids))] for y in range(len(cluster))], np.int32)
+    #     print("2")
+    #     orders[0][ids.index(cluster[0][1])] = 1
+    #     orders_counter = 0
+    #     print(len(cluster))
+    #     for i in range(1, len(cluster)):
+    #         if cluster[i][0] == cluster[i-1][0]:
+    #             orders[orders_counter][ids.index(cluster[i][1])] = 1
+    #         else:
+    #             orders_counter += 1
+    #             orders[orders_counter][ids.index(cluster[i][1])] = 1
+    #     print("3")
+    #     df = pd.DataFrame(orders, columns=ids)
+    #     df.to_csv("{0}/cluster{1}_dunnhumby.csv".format(data_path, i_c))
+    #     #print(df.head())
+    # print(len(g), l)

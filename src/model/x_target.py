@@ -127,7 +127,7 @@ average = []
 average_all = []
 purchasing = []
 target = []
-for i_episode in range(2000, 3000):
+for i_episode in range(num_episodes):
     n = i_episode
     state = env.vector_states[n]
     action = select_action(state)
@@ -141,4 +141,4 @@ for i_episode in range(2000, 3000):
 result = pd.DataFrame()
 result['Purchasing'] = purchasing
 result["Target"] = target
-result.to_csv("E:\Projects\MBA_retail\\x_target_2.csv")
+result.to_csv("E:\Projects\MBA_retail\\x_target_3.csv")
