@@ -200,8 +200,6 @@ if __name__ == "__main__":
 
     data_path_rules = "E:\Projects\MBA_retail\\tmp"
 
-
-
     data = pd.read_csv('{0}/change_train.csv'.format(data_path_rules))
     data_prior = pd.read_csv('{0}/change_prior.csv'.format(data_path_rules))
     data = data.drop(columns=['order_id'])

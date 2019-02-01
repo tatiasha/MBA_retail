@@ -166,37 +166,43 @@ def get_clusters(n_clusters):
 
 if __name__ == "__main__":
     data_path = "E:\Data\dunnhumby"
-    transactions = pd.read_csv('{0}/transaction_data.csv'.format(data_path))
+    # transactions = pd.read_csv('{0}/transaction_data.csv'.format(data_path))
     clients_information = pd.read_csv('{0}/hh_demographic.csv'.format(data_path))
-    products_name = pd.read_csv('{0}/product.csv'.format(data_path))
-    print(len(products_name))
-    total = pd.merge(transactions, clients_information, on=['household_key', 'household_key'])
-    total = pd.merge(total, products_name, on=['PRODUCT_ID', 'PRODUCT_ID'])
-    ids = list(total['PRODUCT_ID'].unique())
-    print(len(ids))
-
-    data_path = 'E:\Projects\MBA_retail\\tmp'
-    g = get_clusters(5)
-    l = [len(i) for i in g.values()]
-    print(l)
-    i_c = 0
-    for cluster in g.keys():
-        i_c += 1
-        cluster = g[cluster]
-        cluster = cluster[['BASKET_ID', 'PRODUCT_ID']]
-        cluster = cluster.sort_values(by=['BASKET_ID'], ascending=False)
-        cluster = cluster.values
-        orders = [[0 for x in range(len(ids))] for y in range(len(cluster))]
-        orders[0][ids.index(cluster[0][1])] = 1
-        orders_counter = 0
-        print(len(cluster))
-        for i in range(1, len(cluster)):
-            if cluster[i][0] == cluster[i-1][0]:
-                orders[orders_counter][ids.index(cluster[i][1])] = 1
-            else:
-                orders_counter += 1
-                orders[orders_counter][ids.index(cluster[i][1])] = 1
-
-        df = pd.DataFrame(orders, columns=ids)
-        df.to_csv("{0}\cluster{1}_dunnhumby.csv".format(data_path, i_c))
-    print(len(g), l)
+    print(clients_information.head())
+    print(list(clients_information))
+    for i in list(clients_information):
+        print(i)
+        print(len(clients_information[i].unique()), clients_information[i].unique())
+        print('=====')
+    # products_name = pd.read_csv('{0}/product.csv'.format(data_path))
+    # print(len(products_name))
+    # total = pd.merge(transactions, clients_information, on=['household_key', 'household_key'])
+    # total = pd.merge(total, products_name, on=['PRODUCT_ID', 'PRODUCT_ID'])
+    # ids = list(total['PRODUCT_ID'].unique())
+    # print(len(ids))
+    #
+    # data_path = 'E:\Projects\MBA_retail\\tmp'
+    # g = get_clusters(5)
+    # l = [len(i) for i in g.values()]
+    # print(l)
+    # i_c = 0
+    # for cluster in g.keys():
+    #     i_c += 1
+    #     cluster = g[cluster]
+    #     cluster = cluster[['BASKET_ID', 'PRODUCT_ID']]
+    #     cluster = cluster.sort_values(by=['BASKET_ID'], ascending=False)
+    #     cluster = cluster.values
+    #     orders = [[0 for x in range(len(ids))] for y in range(len(cluster))]
+    #     orders[0][ids.index(cluster[0][1])] = 1
+    #     orders_counter = 0
+    #     print(len(cluster))
+    #     for i in range(1, len(cluster)):
+    #         if cluster[i][0] == cluster[i-1][0]:
+    #             orders[orders_counter][ids.index(cluster[i][1])] = 1
+    #         else:
+    #             orders_counter += 1
+    #             orders[orders_counter][ids.index(cluster[i][1])] = 1
+    #
+    #     df = pd.DataFrame(orders, columns=ids)
+    #     df.to_csv("{0}\cluster{1}_dunnhumby.csv".format(data_path, i_c))
+    # print(len(g), l)

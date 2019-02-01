@@ -26,9 +26,9 @@ def convert_to_list(a):
 class Net(nn.Module):
    def __init__(self):
        super(Net, self).__init__()
-       self.l1 = nn.Linear(51, 64)
-       self.l2 = nn.Linear(64, 32)
-       self.l3 = nn.Linear(32, 51)
+       self.l1 = nn.Linear(51, 256)
+       self.l2 = nn.Linear(256, 512)
+       self.l3 = nn.Linear(512, 51)
 
        # self.conv1 = nn.Conv2d(3, 6, 5)
        # self.pool = nn.MaxPool2d(2, 2)
@@ -65,11 +65,12 @@ if __name__ == '__main__':
 
     inp = []
     lbl = []
-    train_size = 30000
+    train_size = 60000
     for i in range(train_size):
+        print(i)
         tmp_inp = []
         tmp_lbl = []
-        idx = [np.random.randint(0, 1500) for j in range(batch_size)]
+        idx = [np.random.randint(0, 5000) for j in range(batch_size)]
         for h in idx:
             tmp_inp.append(inputs_train[h])
             tmp_lbl.append(labels_train[h])
@@ -87,11 +88,11 @@ if __name__ == '__main__':
     net = Net()
     # CosineEmbeddingLoss
     # CrossEntropyLoss
-    criterion = nn.L1Loss()
+    criterion = nn.SmoothL1Loss()
     optimizer = optim.Adam(net.parameters(), lr=0.01)
     # optimizer = optim.LBFGS(net.parameters(), lr=0.0001)
 
-    for epoch in range(5):  # loop over the dataset multiple times
+    for epoch in range(7):  # loop over the dataset multiple times
 
         running_loss = 0.0
         for i in range(train_size):
@@ -105,7 +106,7 @@ if __name__ == '__main__':
             # forward + backward + optimize
             outputs = net(inputs)
             # print(outputs)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, target=labels)
             loss.backward()
             optimizer.step()
 
@@ -118,25 +119,28 @@ if __name__ == '__main__':
 
     print('Finished Training')
 
-    correct = 0
     images = inputs_test
     labels = labels_test
-    for i in range(len(images)):
-        outputs = net(images[i])
-        out = []
-        for h in outputs:
-            if h > 0:
-                out.append(1)
-            else:
-                out.append(0)
-        print("nn ", out)
-        print("re ", labels[i].numpy().astype(int).tolist())
-        if sum(out == labels[i].numpy()) == 51:
-            correct += 1
-            print("Ok")
-        print("=====")
+    accuracy = 0
+    for rep in range(5):
+        print(rep)
+        correct = 0
+        for i in range(len(images)):
+            outputs = net(images[i])
+            out = []
+            for h in outputs:
+                if h > np.random.uniform(0, 1):
+                    out.append(1)
+                else:
+                    out.append(0)
+            # print("nn ", out)
+            # print("re ", labels[i].numpy().astype(int).tolist())
+            if sum(out == labels[i].numpy()) == 51:
+                correct += 1
+                # print("Ok")
+            # print("=====")
+        accuracy += 100*correct / len(inputs_test)
+    accuracy /= 5
 
 
-
-    print('Accuracy of the network on the {0} test clients: {1}%'.format(len(inputs_test),
-                                                                         (100*correct / len(inputs_test))))
+    print('Accuracy of the network on the {0} test clients: {1}%'.format(len(inputs_test), accuracy))

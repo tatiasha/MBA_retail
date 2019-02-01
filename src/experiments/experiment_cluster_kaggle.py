@@ -221,8 +221,10 @@ def parse_rules(rules, type):
 if __name__ == "__main__":
     data_path = "E:\Projects\MBA_retail\\tmp"
 
-    clients_aisle, clients_aisle_id , data_lbl, clients_matrix = get_clients()
-
+    clients_aisle, clients_aisle_id, data_lbl, clients_matrix = get_clients()
+    print(clients_aisle)
+    print(clients_aisle_id)
+    print(data_lbl)
     print('rules_start')
     rules_cluster_1 = pd.read_csv('{0}/rules_cluster_1.csv'.format(data_path))
     if (len(rules_cluster_1)>500000):

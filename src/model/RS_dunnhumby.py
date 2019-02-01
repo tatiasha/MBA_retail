@@ -10,6 +10,8 @@ import math
 from collections import Counter
 from scipy.spatial.distance import cosine
 import re
+
+
 def get_clients():
     data_path = "E:\Data\kaggle"
 
@@ -57,6 +59,7 @@ def get_clients():
 
     print('clients - ok')
     return clients_aisle, clients_aisle_id, data_lbl
+
 
 def get_products(clients, rules, flag):
     # flag = 0: return list of recommendation
@@ -119,6 +122,8 @@ def get_products(clients, rules, flag):
         return selected_2
     if (flag == 2):
         return selected
+    if flag == 3:
+        return rec[0][1]
 
 
 def distCosine(vecA, vecB):
@@ -177,8 +182,9 @@ def get_recommendation(client, recommendations, x_data, y_data, c_data):
             recommendation_rules = recommendation_rules.append(
                 {'antecedants': x_data[r], 'consequents': y_data[r], 'confidence': c_data[r]}, ignore_index=True)
     # print(recommendation_rules.head())
-    result_confidence = get_products(client, recommendation_rules, 0)
+    result_confidence = get_products(client, recommendation_rules, 3)
     return result_confidence
+
 
 def parse_rules(rules, type):
     x_data = rules[type]
@@ -194,8 +200,8 @@ def parse_rules(rules, type):
         x_data_r.append(x_d)
     return x_data_r
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     data_path_rules = "E:\Projects\MBA_retail\\tmp"
     #data_tmp = pd.read_csv('{0}/data_merge.csv'.format(data_path_rules))
@@ -207,12 +213,9 @@ if __name__ == "__main__":
 
     #data = data.drop(columns=['order_id'])
 
-    data_prior = pd.read_csv('{0}/datasets/change_prior.csv'.format(data_path_rules))
     data = data.drop(columns=['Unnamed: 0'])
-    data_prior = data_prior.drop(columns=['order_id'])
 
     data_matrix = data.as_matrix()
-    data_matrix_prior = data_prior.as_matrix()
     print('Files are read')
 
     # df1 = data_tmp[['order_id', 'product_name_groc', 'product_id']]
@@ -222,7 +225,6 @@ if __name__ == "__main__":
     #
     # df1_prior = data_tmp_prior[['order_id', 'product_name_groc', 'product_id']]
     # df1_prior = df1_prior.sort_values(by=['order_id'])
-    names_prior = (list(data_prior))
     # df_prior = df1_prior.as_matrix()
 
 
@@ -231,12 +233,6 @@ if __name__ == "__main__":
     print(names)
     Matrix_cos = [[0 for x in range(N)] for y in range(N)]
 
-    N_prior = len(data_matrix_prior[0])
-    print(len(data_matrix_prior), len(data_matrix_prior[1]))
-    print(names_prior)
-
-    Matrix_cos_prior = [[0 for x in range(N_prior)] for y in range(N_prior)]
-
     cols = ["product_name", "N"]
     products_cos = pd.DataFrame(columns=cols)
     products_cos_prior = pd.DataFrame(columns=cols)
@@ -244,7 +240,7 @@ if __name__ == "__main__":
     print("ok2")
 
     for i in range(N):
-        products_cos = products_cos.append({'product_name':names[i], 'N':i},  ignore_index=True)
+        products_cos = products_cos.append({'product_name': names[i], 'N': i},  ignore_index=True)
         for j in range(i, N):
             i_i = data_matrix[:, i]
             j_j = data_matrix[:, j]
@@ -252,17 +248,6 @@ if __name__ == "__main__":
             Matrix_cos[i][j] = cosine
             Matrix_cos[j][i] = cosine
     print('Matrix_cos - ok')
-
-    for i in range(N_prior):
-        products_cos_prior = products_cos_prior.append({'product_name':names_prior[i], 'N':i},  ignore_index=True)
-        for j in range(i, N_prior):
-            i_i = data_matrix_prior[:, i]
-            j_j = data_matrix_prior[:, j]
-            cosine = distCosine(i_i, j_j)
-            Matrix_cos_prior[i][j] = cosine
-            Matrix_cos_prior[j][i] = cosine
-    print('Matrix_cos - ok - _prior')
-
 
     clients_aisle, clients_aisle_id , data_lbl = get_clients()
     print(len(clients_aisle))
@@ -273,18 +258,9 @@ if __name__ == "__main__":
     c_data = rules['confidence'].tolist()
     print('rules - ok', len(rules))
 
-    rules_prior = pd.read_csv('{0}/rules/rules_prior.csv'.format(data_path_rules))
-    x_data_prior = parse_rules(rules_prior, 'antecedants')
-    y_data_prior = parse_rules(rules_prior, 'consequents')
-    c_data_prior = rules_prior['confidence'].tolist()
-
-    print('rules - ok', len(rules_prior))
-
-    #
     C = 5000#len(clients_aisle)
 
     conf = []
-
 
     for i in range(C):
         print(i + 1, '/', C)
@@ -296,23 +272,11 @@ if __name__ == "__main__":
             clients_aisle_id.append(t)
         cos = get_recommendation_cos(Matrix_cos, clients_aisle_id, names)
         cos = list((set(cos) - set(clients_aisle[i])))
-        cos_prior = get_recommendation_cos(Matrix_cos_prior, clients_aisle_id, names_prior)
-        cos_prior = list((set(cos_prior) - set(clients_aisle[i])))
 
         print('T clients - {0}; cos - {1}'.format(len(clients_aisle[i]),len(cos)))
-        print('P clients - {0}; cos - {1}'.format(len(clients_aisle[i]), len(cos_prior)))
 
         result = get_recommendation(clients_aisle[i], cos, x_data, y_data, c_data)
-        result_prior = get_recommendation(clients_aisle[i], cos_prior, x_data_prior, y_data_prior, c_data_prior)
-        print(result_prior, result)
-        inter = len(list(set(result) & set(result_prior)))
-        union = len(list(set(result_prior+result)))
-        if union != 0:
-            print(float(inter) / float(union))
-            conf.append(float(inter) / float(union))
-        else:
-            print("0")
-
+        conf.append(sum(result)/len(result))
 
     conf = np.sort(conf)
 
